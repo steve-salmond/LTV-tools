@@ -1,0 +1,70 @@
+{
+	"Island of Mystery":{
+		"dependencies":[
+		],
+		"buttons": [
+			{
+				"icon":"IoM_publishModel.svg",
+				"label":"Publish Model",
+				"script":"IoM_publishModel.py",
+				"modules": ["LlamaIO/__init__.py","LlamaIO/LlamaUtil.py","baseIO/getProj.py"],
+				"command":"import IoM_publishModel;from IoM_publishModel import IO_publishModel_window;from IoM_publishModel import PublishModelCheckText;IoM_publishModel.IO_publishModel(0)",
+				"stp":"python"
+			},
+			{
+				"icon":["IoM_publishAnim.svg","IoMError.svg"],
+				"label":"Publish Anim",
+				"script":"IoM_publishAnim.py",
+				"modules": ["baseIO/__init__.py","baseIO/sceneVar.py","baseIO/getProj.py"],
+				"command":"import IoM_publishAnim;from IoM_publishAnim import *;IoM_publishAnim.IoM_exportAnim()",
+				"stp":"python"
+			},
+			{
+				"icon":"separator"
+			},
+			{
+				"icon":"IoM_sceneSetup.svg",
+				"label":"Set up a scene",
+				"script":"IoM_sceneSetup.py",
+				"modules": ["baseIO/__init__.py","baseIO/sceneVar.py","baseIO/getProj.py"],
+				"command":"import IoM_sceneSetup;from IoM_sceneSetup import *;IoM_setup()",
+				"stp":"python"
+			},
+			{
+				"icon":"IoM_playblast.svg",
+				"label":"Quick Playblast",
+				"script":"IoM_playblast.py",
+				"modules": ["baseIO/__init__.py","baseIO/sceneVar.py","baseIO/getProj.py"],
+				"command":"import IoM_playblast;IoM_playblast.setupDisplay()",
+				"stp":"python",
+				"menuItem":[
+					{
+						"label":"Playblast HUD",
+						"command":"import IoM_playblast;IoM_playblast.setHud()"
+					},
+					{
+						"label":"Reset HUD",
+						"command":"import IoM_playblast;IoM_playblast.resetHud()"
+					}
+				]
+			},
+			{
+				"icon":"separator"
+			}
+		]
+	},
+	"Updates":{
+		"checkStatus":2,
+		"dependencies":[
+		],
+		"buttons": [
+			{
+				"icon":"installToolbox.svg",
+				"label":"install or update toolbox",
+				"script":"installToolbox.mel",
+				"command":"source installToolbox;installToolbox;",
+				"stp":"mel"
+			}
+		]
+	}
+}
