@@ -6,6 +6,7 @@ import json
 import os
 import urllib2
 from collections import OrderedDict
+import baseIO.setEnv as setEnv
 
 def createShelf(shelfName):
 	
@@ -207,6 +208,8 @@ def CheckText():
 	shelfName = cmds.textField('shelfNameText',q=True,text=True)
 
 	checkGroups(shelfName)
+
+	setEnv.updateEnvFile() #update .env file
 
 def FilterOutSystemPaths(path):
 	systemPath  = 0

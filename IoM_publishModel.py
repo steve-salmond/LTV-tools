@@ -91,7 +91,7 @@ def makeFbx(refName,obj):
 	cmds.select(geo,bodyRig,r=True)
 
 	#export .fbx
-	cmds.file(pathName,force=True,type='FBX export',pr=True,es=True)
+	cmds.file(pathName,force=True,type='Fbx',pr=True,es=True)
 
 	#reselect initial selection
 	cmds.select(obj,r=True)
@@ -154,7 +154,7 @@ def PublishModelCheckText():
 		#full path to scene
 		scenePath = cmds.file(q=True,sn=True)
 		#clean up texture paths
-		cleanTexturePaths()
+		#cleanTexturePaths()
 		#binary
 		makeRefLog = [0,0,0]
 		cmds.select(tempSelect,r=True)

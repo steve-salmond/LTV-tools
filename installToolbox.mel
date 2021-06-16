@@ -1,5 +1,12 @@
 global proc installToolbox()
 {
+	string $project = `workspace -q -dir -rd`;
+
+	string $command = "sys.path.append(\""+$project+"scripts\")";
+	print $command;
+
+	python "import sys";
+	python $command;
 	python ("import installToolbox;reload(installToolbox);from installToolbox import *;installToolbox.toolbox_install()");
 
 }
