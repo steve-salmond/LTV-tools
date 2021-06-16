@@ -109,6 +109,7 @@ def exportAnimation(obj):
 	#mel.eval("FBXLoadExportPresetFile -f \"%s/data/IoM_animExport.fbxexportpreset\";"%getProj.getProject())
 	#export fbx
 	#cmds.file(pathName,force=True,type='FBX export',relativeNamespace=ns,es=True)
+	cmds.FBXExportBakeComplexAnimation("-v",True)
 	cmds.FBXExportAnimationOnly("-v",True)
 	cmds.FBXExportUseSceneName ("-v",True)
 	cmds.FBXExport('-file', pathName,'-s')

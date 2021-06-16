@@ -14,6 +14,8 @@ import LTV_utilities.fileWrangle as fileWrangle
 import LTV_utilities.camera as cam
 import LTV_utilities.formatExports as exp
 import LTV_utilities.persistenceNode as persist
+import LTV_utilities.unityConfig as unity
+import LTV_utilities.unityConfig as bakeKeys
 
 def selRef(asset):
 	cmds.select(asset,r=True)
@@ -60,15 +62,6 @@ def findPublishedAssets():
 		
 	return publishedAssets
 
-
-def userPrefsPath():
-
-	if platform.system() == "Windows":
-		prefPath = os.path.expanduser('~/maya/prefs')
-	else:
-		prefPath = os.path.expanduser('~/Library/Preferences/Autodesk/Maya/prefs')
-	return prefPath
-
 def browseToFolder():
 
 	folder = cmds.fileDialog2(fileMode=3, dialogStyle=1)
@@ -78,7 +71,7 @@ def browseToFolder():
 	#format json
 	userPrefsDict = {"unity": {"path":  folder[0]}}
 	#make path
-	prefPath = userPrefsPath()
+	prefPath = fileWrangle.userPrefsPath()
 	#make folder
 	if not os.path.exists(prefPath):
 			os.makedirs(prefPath)
@@ -88,13 +81,13 @@ def browseToFolder():
 	with open(jsonFileName, mode='w') as feedsjson:
 		json.dump(userPrefsDict, feedsjson, indent=4, sort_keys=True)
 
-	versions = getUnityVersions(folder[0])
+	versions = unity.getUnityVersions(folder[0])
 	menuItems = cmds.optionMenu('versionSelection', q=True, itemListLong=True)
 	if menuItems:
 		cmds.deleteUI(menuItems)
 	for v in versions:
 		cmds.menuItem(l=v)
-	preferedVersion = preferedUnityVersion()
+	preferedVersion = unity.preferedUnityVersion()
 	try:
 		cmds.optionMenu('versionSelection',v=preferedVersion,e=True)
 	except:
@@ -107,50 +100,6 @@ def disableMenu(checkbox,menu,textfield):
 		cmds.optionMenu(obj,e=True,en=checkValue)
 	for obj in textfield:
 		cmds.textFieldButtonGrp(obj,e=True,en=checkValue)
-
-
-def preferedUnityVersion():
-	projPath = getProj.getProject()
-	settingsFile = '%sdata/projectSettings.json'%(projPath)
-	with open(settingsFile) as json_data:
-		data = json.load(json_data)
-		json_data.close()
-		return (data['unity']['preferedVersion'])
-
-def getUnityPath():
-
-	prefPath = userPrefsPath()
-	prefFile = '%s/IoM_prefs.json'%(prefPath)
-	try:
-		with open(prefFile) as json_data:
-			data = json.load(json_data)
-			json_data.close()
-			unityEditorPath = data['unity']['path']
-	except:
-		print 'no existing pref file found, trying default Unity locations'
-
-		if platform.system() == "Windows":
-			unityEditorPath = "C:/Program Files/Unity/Hub/Editor"
-		else:
-			unityEditorPath = "/Applications/Unity/Hub/Editor"
-	return unityEditorPath
-
-def getUnityVersions(myPath):
-	#list all versions of Unity on the system
-	versions = []
-	#filter out unnecessary folders 
-	try:
-		for f in os.listdir(myPath):
-			if f[0] != '.' and os.path.isdir('%s/%s'%(myPath,f)):
-				for e in os.listdir('%s/%s'%(myPath,f)):
-					if e == 'Editor' or e == 'Unity.app':
-						#build new list
-						versions.append(f)
-	except:
-		pass
-	return versions
-		
-
 
 
 def copyUnityScene():
@@ -219,9 +168,6 @@ def prepFile(assetObject):
 				deformationSystems.append('%s|*CC3_Skeleton'%assetObject[i])
 
 		if sel:
-			#bake keys
-			cmds.bakeResults(deformationSystems,simulation=True,t=(startFrame,endFrame),hierarchy='below',sampleBy=1,oversamplingRate=1,disableImplicitControl=True,preserveOutsideKeys=True,sparseAnimCurveBake=False,removeBakedAttributeFromLayer=False,removeBakedAnimFromLayer=False,bakeOnOverrideLayer=False,minimizeRotation=True,controlPoints=False,shape=True)
-
 			#export animation one object at a time
 			for obj in sel:
 				#do the export
@@ -294,6 +240,7 @@ def prepFile(assetObject):
 	jsonFileName  = ('%s.json'%(filename.rsplit('/',1)[-1].split('.')[0]))
 	
 	pathName = '%s/Unity/Assets/Resources/json/%s'%(parentFolder,jsonFileName)
+	os.mkdir('%s/Unity/Assets/Resources/json'%(parentFolder))
 	with open(pathName, mode='w') as feedsjson:
 		json.dump(sceneDict, feedsjson, indent=4, sort_keys=True)
 
@@ -386,11 +333,11 @@ def IoM_exportAnim_window():
 	sep3 = cmds.separator("sep3",height=4, style='in' )
 	versionLabel = cmds.text('versionLabel',label='Unity',w=40,al='left')
 	versionSelection = cmds.optionMenu('versionSelection')
-	myPath = getUnityPath()
-	versions = getUnityVersions(myPath)
+	myPath = unity.getUnityPath()
+	versions = unity.getUnityVersions(myPath)
 	for v in versions:
 		cmds.menuItem(l=v)
-	preferedVersion = preferedUnityVersion()
+	preferedVersion = unity.preferedUnityVersion()
 	try:
 		cmds.optionMenu('versionSelection',v=preferedVersion,e=True)
 	except:

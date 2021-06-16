@@ -1,6 +1,7 @@
 import os
 import baseIO.getProj as getProj
 import maya.cmds as cmds
+import platform
 
 def getParentFolder():
 	#get parent folder
@@ -49,3 +50,11 @@ def listFiles(path,filetype):
 		#remove duplicates
 		fileNames = list(set(fileNames))
 	return fileNames
+
+
+def userPrefsPath():
+	if platform.system() == "Windows":
+		prefPath = os.path.expanduser('~/maya/prefs')
+	else:
+		prefPath = os.path.expanduser('~/Library/Preferences/Autodesk/Maya/prefs')
+	return prefPath
