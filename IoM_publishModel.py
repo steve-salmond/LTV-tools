@@ -73,7 +73,7 @@ def getParentFolder():
 def makeFbx(refName,obj):
 	#unparent rig and geo
 	geo = '|%s|Geometry'%obj
-	bodyRig = '|%s|DeformationSystem'%obj
+	bodyRig = '|%s|CC3_Skeleton'%obj
 
 	#export fbx
 	#define full file name
@@ -91,7 +91,10 @@ def makeFbx(refName,obj):
 	cmds.select(geo,bodyRig,r=True)
 
 	#export .fbx
-	cmds.file(pathName,force=True,type='Fbx',pr=True,es=True)
+	#cmds.file(pathName,force=True,type='Fbx',pr=True,es=True,f=True)
+	cmds.FBXExportAnimationOnly("-v",True)
+	cmds.FBXExportUseSceneName ("-v",True)
+	cmds.FBXExport('-file', pathName,'-s')
 
 	#reselect initial selection
 	cmds.select(obj,r=True)

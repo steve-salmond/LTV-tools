@@ -10,6 +10,10 @@ import platform
 import subprocess
 import tempfile
 import re
+import LTV_utilities.fileWrangle as fileWrangle
+import LTV_utilities.camera as cam
+import LTV_utilities.formatExports as exp
+import LTV_utilities.persistenceNode as persist
 
 def selRef(asset):
 	cmds.select(asset,r=True)
@@ -40,126 +44,22 @@ def fixRef(asset,errorButton):
 		#hide button
 		cmds.iconTextButton(errorButton,e=True,vis=False)
 
-def listFolders(path):
-	#get project folder
-	parentFolder,remainingPath = getParentFolder()
-	#add relative path to folder
-	pathName = '%s/%s'%(parentFolder,path)
-	#make list for legitmate files
-	fileNames = []
-	#read folder
-	if(os.path.isdir(pathName)):
-		files = os.listdir(pathName)
-		for f in files:
-			#filter out filetypes
-			if os.path.isdir('%s/%s'%(pathName,f)) and f[0] != '.':
-				fileNames.append(f)
-		#remove duplicates
-		fileNames = list(set(fileNames))
-	return fileNames
-
 def findPublishedAssets():
 	publishedAssets = []
 	allTransforms = cmds.ls(transforms=True,l=True)
-	assetFolders = listFolders('maya/scenes/Models')
+	assetFolders = fileWrangle.listFolders('maya/scenes/Models')
 	for t in allTransforms:
 		if cmds.attributeQuery( 'publishName', node=t, exists=True):
-			fullRefPath = cmds.referenceQuery( t, filename=True )
-			parentFolder = fullRefPath.split('/')[-2]
-			correctFile = 0
-			if parentFolder in assetFolders:
-				correctFile = 1
+			#fullRefPath = cmds.referenceQuery( t, filename=True )
+			#parentFolder = fullRefPath.split('/')[-2]
+			#correctFile = 0
+			#if parentFolder in assetFolders:
+			correctFile = 1
 			t=t[1:]
 			publishedAssets.append({"transform":t,"correctFile":correctFile})
+		
 	return publishedAssets
 
-def findDirectionalLights():
-	lightTransforms = []
-	lights = cmds.ls(type="directionalLight")
-	for l in lights:
-		p = cmds.listRelatives(l, p=True)[0]
-		lightTransforms.append(p)
-	return lightTransforms
-
-def parentNewCamera(oldCamera):
-	#find cameraShape
-	camShape = cmds.listRelatives(oldCamera,type='camera')
-	oldCamera = [oldCamera]
-	oldCamera.append(camShape[0])
-	#make new camera
-	newCamera = cmds.camera(n='EXPORT_CAM');
-	#copy transform attributes
-	atttributes = ['rotatePivotX','rotatePivotY','rotatePivotZ','scalePivotX','scalePivotY','scalePivotZ']
-	for a in atttributes:
-		cmds.connectAttr('%s.%s'%(oldCamera[0],a),'%s.%s'%(newCamera[0],a))
-	#constrain new camera to old camera
-	cmds.parentConstraint(oldCamera[0],newCamera[0])
-	#copy camera attributes
-	atttributes = ['focalLength']
-	for a in atttributes:
-		cmds.connectAttr('%s.%s'%(oldCamera[1],a),'%s.%s'%(newCamera[1],a))
-	#set extra attributes
-	filmFit = cmds.getAttr('%s.filmFit'%oldCamera[1])
-	cmds.setAttr('%s.filmFit'%newCamera[1],filmFit)
-	cmds.setAttr('%s.nearClipPlane'%newCamera[1],10)
-	cmds.setAttr('%s.farClipPlane'%newCamera[1],100000)
-	#return new transform and shape as list
-	return newCamera
-
-def readFilePrefs(attr):
-	value = ''
-	try:
-		value = cmds.getAttr('IoM_filePrefs.%s'%(attr))
-	except:
-		pass
-	return value
-
-def addAttrPlus(obj,attr,v):
-	value = ''
-	if v:
-		value = v
-	attrExists = cmds.attributeQuery(attr, node=obj, exists=True)
-	if attrExists == False:
-		cmds.addAttr(obj,ln=attr,dt='string')
-	cmds.setAttr('%s.%s'%(obj,attr),value,type='string')
-
-def createFilePrefs():
-	iomPrefNode = ''
-	if cmds.objExists('IoM_filePrefs') == False:
-		iomPrefNode = cmds.createNode('transform', name='IoM_filePrefs')
-		cmds.setAttr('%s.visibility'%iomPrefNode,0)
-		cmds.setAttr('%s.hiddenInOutliner'%iomPrefNode,1)
-	else:
-		iomPrefNode = 'IoM_filePrefs'
-	
-	profileName = cmds.optionMenu('postProfileSelection',q=True,v=True)
-	addAttrPlus(iomPrefNode,'profileName',profileName)
-	setName = cmds.optionMenu('setSelection',q=True,v=True)
-	addAttrPlus(iomPrefNode,'setName',setName)
-	rimName = cmds.optionMenu('rimSelection',q=True,v=True)
-	addAttrPlus(iomPrefNode,'rimName',rimName)
-	sunName = cmds.optionMenu('sunSelection',q=True,v=True)
-	addAttrPlus(iomPrefNode,'sunName',sunName)
-
-#list files of a type in a folder
-def listFiles(path,filetype):
-	#get project folder
-	parentFolder,remainingPath = getParentFolder()
-	#add relative path to folder
-	pathName = '%s/%s'%(parentFolder,path)
-	#make list for legitmate files
-	fileNames = []
-	#read folder
-	if(os.path.isdir(pathName)):
-		files = os.listdir(pathName)
-		for f in files:
-			#filter out filetypes
-			if f.split('.')[-1] == filetype:
-				#remove extention
-				fileNames.append(f.split('.')[0])
-		#remove duplicates
-		fileNames = list(set(fileNames))
-	return fileNames
 
 def userPrefsPath():
 
@@ -251,77 +151,7 @@ def getUnityVersions(myPath):
 	return versions
 		
 
-def exportAsAlembic(abcFilename):
 
-	#get file/folder path
-	parentFolder,remainingPath = getParentFolder()
-
-	#get workspace
-	workspace = cmds.workspace( q=True, directory=True, rd=True)
-	workspaceLen = len(workspace.split('/'))
-	#get filename
-	filename = cmds.file(q=True,sn=True)
-	#get relative path (from scenes)
-	relativePath = ''
-	for dir in filename.split('/')[workspaceLen:-1]:
-		relativePath += '%s/'%(dir)
-
-	#string of objects to export
-	exportString = ''
-	returnString = ''
-	sel = cmds.textScrollList('extrasList',q=True,allItems=True)
-	if sel:
-		for item in sel:
-			exportString += ' -root %s'%(item)
-
-		#get timeline
-		startFrame = int(cmds.playbackOptions(q=True,minTime=True))
-		endFrame = int(cmds.playbackOptions(q=True,maxTime=True))
-
-		#set folder to export to  
-		folderPath = '%s/Unity/Assets/Resources/%s'%(parentFolder,remainingPath)
-		if not os.path.exists(folderPath):
-			os.makedirs(folderPath)
-
-		#check if plugin is already loaded
-		if not cmds.pluginInfo('AbcImport',query=True,loaded=True):
-			try:
-				#load abcExport plugin
-				cmds.loadPlugin( 'AbcImport' )
-			except: 
-				cmds.error('Could not load AbcImport plugin')
-
-		#export .abc
-		abcExportPath = '%s/%s_cache.abc'%(folderPath,abcFilename)
-		abcTempPath = '%s/%s_cache.abc'%(tempfile.gettempdir().replace('\\','/'),abcFilename)
-		command = '-frameRange %d %d -uvWrite -writeColorSets -writeFaceSets -writeVisibility -wholeFrameGeo -worldSpace -writeUVSets -dataFormat ogawa%s -file \"%s\"'%(startFrame,endFrame,exportString,abcTempPath)
-		#load plugin
-		if not cmds.pluginInfo('AbcExport',query=True,loaded=True):
-			try:
-				#load abcExport plugin
-				cmds.loadPlugin( 'AbcExport' )
-			except: cmds.error('Could not load AbcExport plugin')
-		#write to disk
-		cmds.AbcExport ( j=command )
-		#copy file from temp folder to project
-		copyfile(abcTempPath, abcExportPath)
-		#export fbx for materials
-		cmds.select(sel,r=True)
-		print abcExportPath
-		cmds.file(abcExportPath.replace('.abc','_mat.fbx'),force=True,type='FBX export',es=True)
-
-		returnString = "%s/%s_cache"%(remainingPath,abcFilename)
-	
-	return returnString
-
-def getParentFolder():
-	#get parent folder
-	projPath = getProj.getProject()
-	scenePath = cmds.file(q=True,sn=True)
-	parentFolder = projPath.rsplit('/',2)[0]
-	pathLen = len(projPath.split('/'))
-	remainingPath = scenePath.split('/',pathLen)[-1].rsplit('/',1)[0]
-	return parentFolder,remainingPath
 
 def copyUnityScene():
 	#get version of Unity from selection menu
@@ -329,7 +159,7 @@ def copyUnityScene():
 	#check if checkBox is checked and a Unity version exists
 	if cmds.checkBox('unityCheck',v=True,q=True) and len(unityVersion) > 0:
 		#get file/folder path
-		parentFolder,remainingPath = getParentFolder()
+		parentFolder,remainingPath = fileWrangle.getParentFolder()
 		filename = cmds.file(q=True,sn=True,shn=True)
 		#paths
 		unityTemplateFile = '%s/Unity/Assets/Scenes/Templates/shotTemplate.unity'%(parentFolder)
@@ -360,60 +190,15 @@ def copyUnityScene():
 		
 
 
-#export fbx
-def exportAnimation(obj):
-	#rename file temporarily
-	filename = cmds.file(q=True,sn=True)
-	#objName = obj.split('|')[-1].split(':')[-1]
-	objName = obj.split('|')[-1]
-	objName = objName.replace(':','_')
-	newName = '%s_%s'%(filename.rsplit('.',1)[0],objName)
-	print 'new name = %s'%newName
-	#move object to the root and redefine as itself if it's not already
-	try:
-		obj = cmds.parent(obj,w=True)[0]
-	except:
-		pass
 
-	#select object to export
-	try:
-		exportObject = '%s|*:DeformationSystem'%(obj)
-		cmds.select(exportObject,r=True)
-	except:
-		exportObject = obj
-		cmds.select(exportObject,r=True)
-	#define full file name
-	if ':' in exportObject:
-		ns = exportObject.split(':',1)[0]
-		ns = ns.split('|')[-1]
-		ns = ':%s'%ns
-	else:
-		ns = ':'
-	refFileName  = ('%s.fbx'%(newName.rsplit('/',1)[-1].split('.')[0]))
-
-	#output name
-	parentFolder,remainingPath = getParentFolder()
-	pathName = '%s/Unity/Assets/Resources/%s/%s'%(parentFolder,remainingPath,refFileName)
-	#make folder if it doesn't exist
-	if not os.path.exists(pathName.rsplit('/',1)[0]):
-		os.makedirs(pathName.rsplit('/',1)[0])
-	
-	#load fbx presets from file
-	mel.eval("FBXLoadExportPresetFile -f \"%s/data/IoM_animExport.fbxexportpreset\";"%getProj.getProject())
-	#export fbx
-	cmds.file(pathName,force=True,type='FBX export',relativeNamespace=ns,es=True)
-	#restore the filename
-	cmds.file(rename=filename)
-
-	return obj,newName,remainingPath
 
 
 def prepFile(assetObject):
 	#save scene
-	createFilePrefs()
+	persist.createFilePrefs()
 	filename = cmds.file(save=True)
 
-	parentFolder,remainingPath = getParentFolder()
+	parentFolder,remainingPath = fileWrangle.getParentFolder()
 
 	#get start and end frame
 	startFrame = sceneVar.getStartFrame()
@@ -431,7 +216,7 @@ def prepFile(assetObject):
 			checkBox = cmds.rowLayout(r,ca=True,q=True)[0]
 			if cmds.checkBox(checkBox,v=True, q=True):
 				sel.append(assetObject[i])
-				deformationSystems.append('%s|*:DeformationSystem'%assetObject[i])
+				deformationSystems.append('%s|*CC3_Skeleton'%assetObject[i])
 
 		if sel:
 			#bake keys
@@ -440,7 +225,7 @@ def prepFile(assetObject):
 			#export animation one object at a time
 			for obj in sel:
 				#do the export
-				obj,newName,remainingPath = exportAnimation(obj)
+				obj,newName,remainingPath = exp.exportAnimation(obj)
 				#make character dictionary
 				try:
 					#get REF filename
@@ -476,34 +261,19 @@ def prepFile(assetObject):
 		except:
 			pass
 
-	rimProfile = cmds.optionMenu('rimSelection',q=True,v=True) #get selected rim profile from ui
-	if rimProfile == 'No Profile':
-		rimProfile = ''
-	else:
-		rimProfile = 'Profiles/rimlight/%s'%rimProfile
 	if cameraName:
 		if len(cameraName) > 0:
-			newCamera = parentNewCamera(cameraName)[0]
+			newCamera = cam.parentNewCamera(cameraName)[0]
 			#bake keys
 			cmds.bakeResults(newCamera,simulation=True,t=(startFrame,endFrame),hierarchy='below',sampleBy=1,oversamplingRate=1,disableImplicitControl=True,preserveOutsideKeys=True,sparseAnimCurveBake=False,removeBakedAttributeFromLayer=False,removeBakedAnimFromLayer=False,bakeOnOverrideLayer=False,minimizeRotation=True,controlPoints=False,shape=True)
 
-			obj,newName,remainingPath = exportAnimation(newCamera)
-			camDict = {"name":  "CAM","model": "%s/%s"%(remainingPath,newName.split('/')[-1]),"anim":"%s/%s"%(remainingPath,newName.split('/')[-1]),"profile":postProfile,"rimProfile":rimProfile}
+			obj,newName,remainingPath = exp.exportAnimation(newCamera)
+			camDict = {"name":  "CAM","model": "%s/%s"%(remainingPath,newName.split('/')[-1]),"anim":"%s/%s"%(remainingPath,newName.split('/')[-1]),"profile":postProfile}
 			sceneDict["cameras"].append(camDict)
 
-	#add lights
-	sunLight = cmds.optionMenu('sunSelection',q=True,v=True)
-	if sunLight == 'Use Default':
-		sunLight = ''
-	else:
-		x = cmds.getAttr('%s.rotateX'%sunLight)
-		y = cmds.getAttr('%s.rotateY'%sunLight)
-		z = cmds.getAttr('%s.rotateZ'%sunLight)
-		camDict = {"angle": {"x":x,"y":y,"z":z}}
-		sceneDict["lights"].append(camDict)
 
 	#export as alembic
-	abcPath = exportAsAlembic(filename.rsplit('/',1)[-1].split('.')[0])
+	abcPath = exp.exportAsAlembic(filename.rsplit('/',1)[-1].split('.')[0])
 
 	if len(abcPath) > 0:
 		extraDict = {"name":  "extras","abc": abcPath,"material": '%s_mat'%abcPath}
@@ -516,16 +286,8 @@ def prepFile(assetObject):
 			setDict = {"name":  setName,"model": 'Sets/%s'%setName}
 			sceneDict["sets"].append(setDict)
 	#read set json file
-	parentFolder,remainingPath = getParentFolder()
+	parentFolder,remainingPath = fileWrangle.getParentFolder()
 	setProfiles = '%s/Unity/Assets/Resources/Sets/%s.json'%(parentFolder,setName)
-	#try:
-	#	with open(setProfiles) as jsonSetData:
-	#		setData = json.load(jsonSetData)
-	#		jsonSetData.close()
-	#		print setData["rimlight"]
-	#		print setData["postProfile"]
-	#except:
-	#	pass
 
 
 	#write json file
@@ -535,11 +297,6 @@ def prepFile(assetObject):
 	with open(pathName, mode='w') as feedsjson:
 		json.dump(sceneDict, feedsjson, indent=4, sort_keys=True)
 
-	
-
-
-
-	
 	#revert to pre baked file
 	try:
 		cmds.file(filename,open=True,force=True,iv=True)
@@ -549,19 +306,7 @@ def prepFile(assetObject):
 	#make new unity scene file
 	copyUnityScene()
 
-#list cameras
-def listAllCameras():
-	cameraTransforms = []
-	listAllCameras = cmds.listCameras(p=True)
-	#remove 'persp' camera
-	if 'persp' in listAllCameras: listAllCameras.remove('persp')
-	for c in listAllCameras:
-		if cmds.objectType(c) == "camera":
-			cp = cmds.listRelatives(c,p=True)[0]
-			cameraTransforms.append(cp)
-		else:
-			cameraTransforms.append(c)
-	return cameraTransforms
+###		UI		###
 
 def addObjectsToScrollList():
 	#list selected objects
@@ -581,8 +326,6 @@ def removeObjectsFromScrollList():
 	for text in sel:
 		cmds.textScrollList('extrasList',e=True,removeItem=text)
 
-
-###		UI		###
 def IoM_exportAnim_window():
 
 	#find all published objects by searching for the 'publishName' attribute
@@ -592,46 +335,21 @@ def IoM_exportAnim_window():
 	exportForm = cmds.formLayout()
 	#Camera selection
 	cameraLabel = cmds.text('cameraLabel',label='Camera',w=40,al='left')
-	allCameras = listAllCameras()
+	allCameras = cam.listAllCameras()
 	cameraSelection = cmds.optionMenu('cameraSelection')
-	for cam in allCameras:
-		cmds.menuItem(l=cam)
-	profiles = listFiles('/Unity/Assets/Resources/Profiles','asset')
+	for camera in allCameras:
+		cmds.menuItem(l=camera)
+	profiles = fileWrangle.listFiles('/Unity/Assets/Resources/Profiles','asset')
 	profiles = ['From Set','No Profile'] + profiles
 	postProfileSelection = cmds.optionMenu('postProfileSelection')
 	for p in profiles:
 		cmds.menuItem(l=p)
-	preferedProfileName = readFilePrefs('profileName')
+	preferedProfileName = persist.readFilePrefs('profileName')
 	try:
 		cmds.optionMenu('postProfileSelection',v=preferedProfileName,e=True)
 	except:
 		pass
-	#Rim light 
-	sep_rimLight = cmds.separator("sep_rimLight",height=4, style='in' )
-	rimLabel = cmds.text('rimLabel',label='Rim Light',w=50,al='left')
-	rimProfiles = listFiles('/Unity/Assets/Resources/Profiles/rimlight','json')
-	rimProfiles = ['No Profile'] + rimProfiles
-	rimSelection = cmds.optionMenu('rimSelection')
-	for r in rimProfiles:
-		cmds.menuItem(l=r)
-	preferedRimProfileName = readFilePrefs('rimName')
-	try:
-		cmds.optionMenu('rimSelection',v=preferedRimProfileName,e=True)
-	except:
-		pass
-	#Sun light 
-	sep_sunLight = cmds.separator("sep_sunLight",height=4, style='in' )
-	sunLabel = cmds.text('sunLabel',label='Sun Light',w=50,al='left')
-	directionalLights = findDirectionalLights()
-	directionalLights = ['Use Default'] + directionalLights
-	sunSelection = cmds.optionMenu('sunSelection')
-	for s in directionalLights:
-		cmds.menuItem(l=s)
-	preferedSunName = readFilePrefs('sunName')
-	try:
-		cmds.optionMenu('sunSelection',v=preferedSunName,e=True)
-	except:
-		pass
+
 	#Asset export
 	sep_assets = cmds.separator("sep_assets",height=4, style='in' )
 	assetsLabel = cmds.text('assetsLabel',label='Assets',w=40,al='left')
@@ -683,12 +401,12 @@ def IoM_exportAnim_window():
 	#Unity Set
 	setLabel = cmds.text('setLabel',label='Set',w=40,al='left')
 	setCheck = cmds.checkBox('setCheck',l="",annotation="Include Set",v=True,cc='disableMenu(\'setCheck\',[\'setSelection\'],[])')
-	sets = listFiles('/Unity/Assets/Resources/Sets','prefab')
+	sets = fileWrangle.listFiles('/Unity/Assets/Resources/Sets','prefab')
 	sets = sorted(sets) #sort alphabetaclly 
 	setSelection = cmds.optionMenu('setSelection')
 	for s in sets:
 		cmds.menuItem(l=s)
-	preferedSetName = readFilePrefs('setName')
+	preferedSetName = persist.readFilePrefs('setName')
 	try:
 		cmds.optionMenu('setSelection',v=preferedSetName,e=True)
 	except:
@@ -706,14 +424,6 @@ def IoM_exportAnim_window():
 		(postProfileSelection,'top',15),
 		(postProfileSelection,'right',10),
 		(cameraLabel,'left',10),
-		(sep_rimLight,'right',10),
-		(sep_rimLight,'left',10),
-		(sep_sunLight,'right',10),
-		(sep_sunLight,'left',10),
-		(sunLabel,'left',10),
-		(sunSelection,'right',10),
-		(rimLabel,'left',10),
-		(rimSelection,'right',10),
 		(sep_assets,'right',10),
 		(sep_assets,'left',10),
 		(assetsLabel,'left',10),
@@ -740,15 +450,7 @@ def IoM_exportAnim_window():
 		attachControl=[
 		(cameraSelection,'left',40,cameraLabel),
 		(postProfileSelection,'left',0,cameraSelection),
-		(sep_rimLight,'top',20,cameraLabel),
-		(rimLabel,'top',20,sep_rimLight),
-		(rimSelection,'top',15,sep_rimLight),
-		(rimSelection,'left',30,rimLabel),
-		(sep_sunLight,'top',60,sep_rimLight),
-		(sunLabel,'top',20,sep_sunLight),
-		(sunSelection,'top',15,sep_sunLight),
-		(sunSelection,'left',30,sunLabel),
-		(sep_assets,'top',60,sep_sunLight),
+		(sep_assets,'top',60,cameraLabel),
 		(assetsLabel,'top',20,sep_assets),
 		(boxLayout,'top',20,sep_assets),
 		(boxLayout,'left',40,cameraLabel),
