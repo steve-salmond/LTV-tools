@@ -4,6 +4,7 @@ import LTV_utilities.fileWrangle as fileWrangle
 import platform
 import os
 import maya.cmds as cmds
+import LTV_utilities.fileWrangle as fileWrangle
 
 def preferedUnityVersion():
 	projPath = getProj.getProject()
@@ -23,6 +24,8 @@ def getUnityProject():
 			unityProjectPath = data['unity']['project']
 	except:
 		print 'no existing pref file found'
+		parentFolder,remainingPath = fileWrangle.getParentFolder()
+		unityProjectPath = "%s/Unity"%parentFolder
 
 	return unityProjectPath
 
@@ -59,35 +62,29 @@ def getUnityVersions(myPath):
 		pass
 	return versions
 
-def browseToFolder():
+def updatePrefs(key,value):
+	userPrefsDict = {"unity":{}} #format json
+	keyDict = {"unity": {key:  value}} #format key
+	prefPath = fileWrangle.userPrefsPath() #make path
+	if not os.path.exists(prefPath):
+		os.makedirs(prefPath) #make folder
+	jsonFileName  = '%s/LTV_prefs.json'%prefPath #file name
+	try:
+		with open(jsonFileName) as json_data: #open the pref file if it exists
+			userPrefsDict = json.load(json_data) #update prefs dictionary from file
+			json_data.close() #close pref file
+	except:
+		pass
+	with open(jsonFileName, mode='w') as feedsjson: #open pref file for writing
+		userPrefsDict["unity"].update(keyDict["unity"]) #update prefs from key dict
+		json.dump(userPrefsDict, feedsjson, indent=4, sort_keys=True) #write new prefs to file
 
+def browseToFolder():
 	folder = cmds.fileDialog2(fileMode=3, dialogStyle=1)
 	if folder:
 		cmds.textFieldButtonGrp('unityPath',e=True,tx=folder[0])
-
-	#format json
-	userPrefsDict = {"unity": {"path":  folder[0]}}
-	#make path
-	prefPath = fileWrangle.userPrefsPath()
-	#make folder
-	if not os.path.exists(prefPath):
-			os.makedirs(prefPath)
-
-	jsonFileName  = '%s/LTV_prefs.json'%prefPath
-	#write json to disk
-	data = {}
-	try:
-		with open(jsonFileName) as json_data:
-			data = json.load(json_data)
-			json_data.close()
-			print(data)
-	except:
-		pass
-
-	with open(jsonFileName, mode='w') as feedsjson:
-		data["unity"].update(userPrefsDict["unity"])
-		print(data)
-		json.dump(data, feedsjson, indent=4, sort_keys=True)
+		
+	updatePrefs("path",folder[0]) #update pref to file
 
 	versions = getUnityVersions(folder[0])
 	menuItems = cmds.optionMenu('versionSelection', q=True, itemListLong=True)
@@ -100,3 +97,11 @@ def browseToFolder():
 		cmds.optionMenu('versionSelection',v=preferedVersion,e=True)
 	except:
 		pass
+
+def browseToProject():
+	folder = cmds.fileDialog2(fileMode=3, dialogStyle=1)
+	if folder:
+		cmds.textFieldButtonGrp('projectPath',e=True,tx=folder[0])
+		
+	updatePrefs("project",folder[0]) #update pref to file
+
