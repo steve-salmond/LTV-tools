@@ -64,6 +64,13 @@
 				"script":"installToolbox.mel",
 				"command":"source installToolbox;installToolbox;",
 				"stp":"mel"
+			},
+			{
+				"icon":"gear.png",
+				"label":"configure unity",
+				"script":"LTV_config.py",
+				"command":"import LTV_config;from LTV_config import *;LTV_config.LTV_configWindow()",
+				"stp":"python"
 			}
 		]
 	}
