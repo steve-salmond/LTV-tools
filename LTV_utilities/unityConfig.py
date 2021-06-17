@@ -3,6 +3,7 @@ import json
 import LTV_utilities.fileWrangle as fileWrangle
 import platform
 import os
+import maya.cmds as cmds
 
 def preferedUnityVersion():
 	projPath = getProj.getProject()
@@ -12,10 +13,23 @@ def preferedUnityVersion():
 		json_data.close()
 		return (data['unity']['preferedVersion'])
 
+def getUnityProject():
+	prefPath = fileWrangle.userPrefsPath()
+	prefFile = '%s/LTV_prefs.json'%(prefPath)
+	try:
+		with open(prefFile) as json_data:
+			data = json.load(json_data)
+			json_data.close()
+			unityProjectPath = data['unity']['project']
+	except:
+		print 'no existing pref file found'
+
+	return unityProjectPath
+
 def getUnityPath():
 
 	prefPath = fileWrangle.userPrefsPath()
-	prefFile = '%s/IoM_prefs.json'%(prefPath)
+	prefFile = '%s/LTV_prefs.json'%(prefPath)
 	try:
 		with open(prefFile) as json_data:
 			data = json.load(json_data)
@@ -44,3 +58,34 @@ def getUnityVersions(myPath):
 	except:
 		pass
 	return versions
+
+def browseToFolder():
+
+	folder = cmds.fileDialog2(fileMode=3, dialogStyle=1)
+	if folder:
+		cmds.textFieldButtonGrp('unityPath',e=True,tx=folder[0])
+
+	#format json
+	userPrefsDict = {"unity": {"path":  folder[0]}}
+	#make path
+	prefPath = fileWrangle.userPrefsPath()
+	#make folder
+	if not os.path.exists(prefPath):
+			os.makedirs(prefPath)
+
+	jsonFileName  = '%s/LTV_prefs.json'%prefPath
+	#write json to disk
+	with open(jsonFileName, mode='w') as feedsjson:
+		json.dump(userPrefsDict, feedsjson, indent=4, sort_keys=True)
+
+	versions = getUnityVersions(folder[0])
+	menuItems = cmds.optionMenu('versionSelection', q=True, itemListLong=True)
+	if menuItems:
+		cmds.deleteUI(menuItems)
+	for v in versions:
+		cmds.menuItem(l=v,parent='versionSelection')
+	preferedVersion = preferedUnityVersion()
+	try:
+		cmds.optionMenu('versionSelection',v=preferedVersion,e=True)
+	except:
+		pass

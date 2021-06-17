@@ -15,163 +15,33 @@ import LTV_utilities.camera as cam
 import LTV_utilities.formatExports as exp
 import LTV_utilities.persistenceNode as persist
 import LTV_utilities.unityConfig as unity
-import LTV_utilities.unityConfig as bakeKeys
-
-def selRef(asset):
-	cmds.select(asset,r=True)
-
-def fixRef(asset,errorButton):
-
-	#get full path to incorrectly referenced file
-	fullRefPath = cmds.referenceQuery( asset, filename=True )
-
-	publishName = ''
-	#try and get name from top transform publish attribute
-	if cmds.attributeQuery('publishName',n=asset,exists=True):
-		publishName = cmds.getAttr('%s.publishName'%asset)
-	else:
-		#try and get the name from the start of the incorrect filename
-		publishName = '%s_REF'%fullRefPath.split('/')[-1].split('_')[0]
-	
-	#find ref node
-	refNode = cmds.referenceQuery( asset, referenceNode=True )
-	parentFolder = 'scenes/Models/%s'%fullRefPath.split('/')[-3]
-	projPath = getProj.getProject()
-	#check assumed path exists
-	checkExistsPath = '%s%s/%s.ma'%(projPath,parentFolder,publishName)
-	newPath = '%s/%s.ma'%(parentFolder,publishName)
-	if os.path.isfile(checkExistsPath):
-		#set new path 
-		cmds.file(newPath, loadReference = refNode)
-		#hide button
-		cmds.iconTextButton(errorButton,e=True,vis=False)
-
-def findPublishedAssets():
-	publishedAssets = []
-	allTransforms = cmds.ls(transforms=True,l=True)
-	assetFolders = fileWrangle.listFolders('maya/scenes/Models')
-	for t in allTransforms:
-		if cmds.attributeQuery( 'publishName', node=t, exists=True):
-			publishedName = cmds.getAttr("%s.publishName"%t)
-			#fullRefPath = cmds.referenceQuery( t, filename=True )
-			#parentFolder = fullRefPath.split('/')[-2]
-			#correctFile = 0
-			#if parentFolder in assetFolders:
-			correctFile = 1
-			t=t[1:]
-			publishedAssets.append({"transform":t,"publishedName":publishedName,"correctFile":correctFile})
+import LTV_utilities.assetWrangle as assetWrangle
+import LTV_utilities.uiAction as ui
 		
-	return publishedAssets
-
-def browseToFolder():
-
-	folder = cmds.fileDialog2(fileMode=3, dialogStyle=1)
-	if folder:
-		cmds.textFieldButtonGrp('unityPath',e=True,tx=folder[0])
-
-	#format json
-	userPrefsDict = {"unity": {"path":  folder[0]}}
-	#make path
-	prefPath = fileWrangle.userPrefsPath()
-	#make folder
-	if not os.path.exists(prefPath):
-			os.makedirs(prefPath)
-
-	jsonFileName  = '%s/IoM_prefs.json'%prefPath
-	#write json to disk
-	with open(jsonFileName, mode='w') as feedsjson:
-		json.dump(userPrefsDict, feedsjson, indent=4, sort_keys=True)
-
-	versions = unity.getUnityVersions(folder[0])
-	menuItems = cmds.optionMenu('versionSelection', q=True, itemListLong=True)
-	if menuItems:
-		cmds.deleteUI(menuItems)
-	for v in versions:
-		cmds.menuItem(l=v)
-	preferedVersion = unity.preferedUnityVersion()
-	try:
-		cmds.optionMenu('versionSelection',v=preferedVersion,e=True)
-	except:
-		pass
-
-
-def disableMenu(checkbox,menu,textfield):
-	checkValue = cmds.checkBox(checkbox,v=True,q=True)
-	for obj in menu:
-		cmds.optionMenu(obj,e=True,en=checkValue)
-	for obj in textfield:
-		cmds.textFieldButtonGrp(obj,e=True,en=checkValue)
-
-
-def copyUnityScene():
-	#get version of Unity from selection menu
-	unityVersion = cmds.optionMenu('versionSelection',v=True,q=True)
-	#check if checkBox is checked and a Unity version exists
-	if cmds.checkBox('unityCheck',v=True,q=True) and len(unityVersion) > 0:
-		#get file/folder path
-		parentFolder,remainingPath = fileWrangle.getParentFolder()
-		filename = cmds.file(q=True,sn=True,shn=True)
-		#paths
-		unityTemplateFile = '%s/Unity/Assets/Scenes/Templates/shotTemplate.unity'%(parentFolder)
-		unitySceneFile = '%s/Unity/Assets/Scenes/%s/%s.unity'%(parentFolder,remainingPath,filename.split('.')[0])
-		#make folder
-		folder = unitySceneFile.rsplit('/',1)[0]
-		if not os.path.exists(folder):
-			os.makedirs(folder)
-		
-		#make Unity Scene File
-		try:
-			projectPath = "%s/Unity"%parentFolder
-			scenePath = "Assets/Scenes/%s/%s.unity"%(remainingPath,filename.split('.')[0])
-			shotName = "%s"%filename.split('.')[0]
-			#get path to Unity from text field
-			unityEditorPath = cmds.textFieldButtonGrp('unityPath',q=True,tx=True)
-			if platform.system() == "Windows":
-				subprocess.Popen('\"%s/%s/Editor/Unity.exe\" -quit -batchmode -projectPath \"%s\" -executeMethod BuildSceneBatch.PerformBuild -shotName \"%s\" -scenePath \"%s\" '%(unityEditorPath,unityVersion,projectPath,shotName,scenePath),shell=True)
-			else:
-				subprocess.Popen('%s/%s/Unity.app/Contents/MacOS/Unity -quit -batchmode -projectPath %s -executeMethod BuildSceneBatch.PerformBuild -shotName \"%s\" -scenePath \"%s\" '%(unityEditorPath,unityVersion,projectPath,shotName,scenePath),shell=True)
-		except:
-			print "Unable to populate Unity scene file"
-			#copy blank Unity scene if auto population fails
-			try:
-				copyfile(unityTemplateFile, unitySceneFile)
-			except:
-				print "no Unity scene file created"
-		
-
-
-
-
 
 def prepFile(assetObject):
-	#save scene
-	persist.createFilePrefs()
-	filename = cmds.file(save=True)
 
-	parentFolder,remainingPath = fileWrangle.getParentFolder()
+	persist.createFilePrefs() #make a node to save ui settings in the scene
+	filename = cmds.file(save=True) #save the scene file
 
-	#get start and end frame
-	startFrame = sceneVar.getStartFrame()
-	endFrame = sceneVar.getEndFrame()
+	parentFolder,remainingPath = fileWrangle.getParentFolder() #get the path to parent folder
+	startFrame = sceneVar.getStartFrame() #start frame
+	endFrame = sceneVar.getEndFrame() #end frame
+
+	### --- ASSETS --- ###
 
 	#add objects to selection if they are checked
-	sel = []
-	deformationSystems = []
-	#start dictionary
-	sceneDict = {"cameras": [],"characters": [],"extras": [],"sets": [],"lights": []}
-	#checkBoxes = cmds.columnLayout('boxLayout',ca=True,q=True)
-	rows = cmds.columnLayout('boxLayout',ca=True,q=True)
+	sel = [] #list for checked assets
+	deformationSystems = [] #list for asset rigs
+	sceneDict = {"cameras": [],"characters": [],"extras": [],"sets": []} #dictionary for publish
+	rows = cmds.columnLayout('boxLayout',ca=True,q=True) #list asset ui rows
 	if rows:
 		for i,r in enumerate(rows):
-			checkBox = cmds.rowLayout(r,ca=True,q=True)[0]
+			checkBox = cmds.rowLayout(r,ca=True,q=True)[0] 
 			if cmds.checkBox(checkBox,v=True, q=True):
-				sel.append(assetObject[i])
-				deformationSystems.append('%s|*:CC3_Skeleton'%assetObject[i])
-
-		if sel:
-			#bake keys
-			#cmds.bakeResults(deformationSystems,simulation=True,t=(startFrame,endFrame),hierarchy='below',sampleBy=1,oversamplingRate=1,disableImplicitControl=True,preserveOutsideKeys=True,sparseAnimCurveBake=False,removeBakedAttributeFromLayer=False,removeBakedAnimFromLayer=False,bakeOnOverrideLayer=False,minimizeRotation=True,controlPoints=False,shape=True)
-
+				sel.append(assetObject[i]) #add asset if it's checked
+				deformationSystems.append('%s|*:CC3_Skeleton'%assetObject[i]) #find rig of the asset and add it
+		if sel: 
 			#export animation one object at a time
 			for obj in sel:
 				refPath = cmds.referenceQuery( obj,filename=True ) #get reference filename
@@ -198,7 +68,9 @@ def prepFile(assetObject):
 				#format json
 				displayName = re.split('\d+', newName)[-1][1:]
 				charDict = {"name":  displayName,"model": publishName,"anim": "%s/%s"%(remainingPath,newName.split('/')[-1])}
-				sceneDict["characters"].append(charDict)
+				sceneDict["characters"].append(charDict) #add to scene dictionary
+
+	### --- CAMERA --- ###
 
 	#add camera and post profile
 	cameraName = cmds.optionMenu('cameraSelection',q=True,v=True)
@@ -213,8 +85,8 @@ def prepFile(assetObject):
 		postProfile = 'Profiles/%s'%postProfile #post profile is from ui
 	if postProfile:
 		try: #copy post profile file
-			postProfileTemplate = '%s/Unity/Assets/Resources/%s.asset'%(parentFolder,postProfile) #path to template post process file
-			postProfileShot = '%s/Unity/Assets/Resources/Profiles/shotSpecific/%s.asset'%(parentFolder,filename.rsplit('/',1)[-1].split('.')[0]) #path to new post process file
+			postProfileTemplate = '%s/Assets/Resources/%s.asset'%(unity.getUnityProject(),postProfile) #path to template post process file
+			postProfileShot = '%s/Assets/Resources/Profiles/shotSpecific/%s.asset'%(unity.getUnityProject(),filename.rsplit('/',1)[-1].split('.')[0]) #path to new post process file
 			copyfile(postProfileTemplate, postProfileShot) #copy the file
 		except:
 			pass
@@ -227,17 +99,18 @@ def prepFile(assetObject):
 
 			obj,newName,remainingPath = exp.exportAnimation(newCamera)
 			camDict = {"name":  "CAM","model": "%s/%s"%(remainingPath,newName.split('/')[-1]),"anim":"%s/%s"%(remainingPath,newName.split('/')[-1]),"profile":postProfile}
-			sceneDict["cameras"].append(camDict)
+			sceneDict["cameras"].append(camDict) #add to scene dictionary
 
 
-	#export as alembic
-	abcPath = exp.exportAsAlembic(filename.rsplit('/',1)[-1].split('.')[0])
+	### --- EXTRAS --- ###
 
-	if len(abcPath) > 0:
-		extraDict = {"name":  "extras","abc": abcPath,"material": '%s_mat'%abcPath}
-		sceneDict["extras"].append(extraDict)
+	abcPath = exp.exportAsAlembic(filename.rsplit('/',1)[-1].split('.')[0]) #do alembic export 
+	if len(abcPath) > 0: #check if anything is there
+		extraDict = {"name":  "extras","abc": abcPath,"material": '%s_mat'%abcPath} #make dictionary for alembic
+		sceneDict["extras"].append(extraDict) #add to scene dictionary
 
-	#Add Sets to dictionary
+	### --- SET / ENVIRONMENT --- ###
+
 	setName = cmds.optionMenu('setSelection',q=True,v=True)
 	if setName and cmds.checkBox('setCheck',q=True,v=True) == True:
 		if len(setName) > 0:
@@ -245,15 +118,15 @@ def prepFile(assetObject):
 			sceneDict["sets"].append(setDict)
 	#read set json file
 	parentFolder,remainingPath = fileWrangle.getParentFolder()
-	setProfiles = '%s/Unity/Assets/Resources/Sets/%s.json'%(parentFolder,setName)
+	setProfiles = '%s/Assets/Resources/Sets/%s.json'%(unity.getUnityProject(),setName)
 
 
 	#write json file
 	jsonFileName  = ('%s.json'%(filename.rsplit('/',1)[-1].split('.')[0]))
 	
-	pathName = '%s/Unity/Assets/Resources/json/%s'%(parentFolder,jsonFileName)
+	pathName = '%s/Assets/Resources/json/%s'%(unity.getUnityProject(),jsonFileName)
 	try:
-		os.mkdir('%s/Unity/Assets/Resources/json'%(parentFolder))
+		os.mkdir('%s/Assets/Resources/json'%(unity.getUnityProject()))
 	except:
 		pass
 	with open(pathName, mode='w') as feedsjson:
@@ -266,33 +139,20 @@ def prepFile(assetObject):
 	#	pass
 
 	#make new unity scene file
-	copyUnityScene()
+	#get version of Unity from selection menu
+	unityVersion = cmds.optionMenu('versionSelection',v=True,q=True)
+	#check if checkBox is checked and a Unity version exists
+	if cmds.checkBox('unityCheck',v=True,q=True) and len(unityVersion) > 0:
+		unityEditorPath = cmds.textFieldButtonGrp('unityPath',q=True,tx=True)
+		exp.copyUnityScene(unityVersion,unityEditorPath)
 
 ###		UI		###
 
-def addObjectsToScrollList():
-	#list selected objects
-	sel = cmds.ls(sl=True)
-	existing = cmds.textScrollList('extrasList',q=True,allItems=True)
-	if existing:
-		for text in existing:
-			cmds.textScrollList('extrasList',e=True,removeItem=text)
-		sel += existing
-		sel = list(set(sel))
-	
-	cmds.textScrollList('extrasList',e=True,append=sel)
-	
-def removeObjectsFromScrollList():
-	#list selected objects
-	sel = cmds.textScrollList('extrasList',q=True,selectItem=True)
-	for text in sel:
-		cmds.textScrollList('extrasList',e=True,removeItem=text)
 
 def IoM_exportAnim_window():
 
 	#find all published objects by searching for the 'publishName' attribute
-
-	publishedAssets = findPublishedAssets()
+	publishedAssets = assetWrangle.findPublishedAssets()
 
 	exportForm = cmds.formLayout()
 	#Camera selection
@@ -301,7 +161,7 @@ def IoM_exportAnim_window():
 	cameraSelection = cmds.optionMenu('cameraSelection')
 	for camera in allCameras:
 		cmds.menuItem(l=camera)
-	profiles = fileWrangle.listFiles('/Unity/Assets/Resources/Profiles','asset')
+	profiles = fileWrangle.listFiles('%s/Assets/Resources/Profiles'%unity.getUnityProject(),'asset')
 	profiles = ['From Set','No Profile'] + profiles
 	postProfileSelection = cmds.optionMenu('postProfileSelection')
 	for p in profiles:
@@ -329,22 +189,22 @@ def IoM_exportAnim_window():
 		cmds.rowLayout(numberOfColumns=2)
 		publishedAsset.append(asset["transform"])
 		if duplicates == False:
-			cmds.checkBox(label=asset["publishedName"], annotation=asset["transform"],v=asset["correctFile"],onCommand='selRef(\"%s\")'%asset["transform"])
+			cmds.checkBox(label=asset["publishedName"], annotation=asset["transform"],v=asset["correctFile"],onCommand='ui.selRef(\"%s\")'%asset["transform"])
 		else:
-			cmds.checkBox(label=asset["publishedName"], annotation=asset["transform"],v=asset["correctFile"],onCommand='selRef(\"%s\")'%asset["transform"])
+			cmds.checkBox(label=asset["publishedName"], annotation=asset["transform"],v=asset["correctFile"],onCommand='ui.selRef(\"%s\")'%asset["transform"])
 
 		if asset["correctFile"] == 0:
 			#make button to show wrong REF
 			errorButton = cmds.iconTextButton( style='iconOnly', image1='IoMError.svg', label='spotlight',h=20,w=20,annotation='Incorrect file used' )
-			cmds.iconTextButton(errorButton,e=True,c='fixRef(\"%s\",\"%s\")'%(asset["transform"],errorButton))
+			cmds.iconTextButton(errorButton,e=True,c='assetWrangle.fixRef(\"%s\",\"%s\")'%(asset["transform"],errorButton))
 		cmds.setParent( '..' )
 	cmds.setParent( '..' )
 	#Extras input
 	sep2 = cmds.separator("sep2",height=4, style='in' )
 	extrasLabel = cmds.text('extrasLabel',label='Extras',w=40,al='left')
 	extrasList = cmds.textScrollList('extrasList',numberOfRows=8, allowMultiSelection=True,height=102)
-	addButton = cmds.button('addButton',l='Add',h=50,w=50,c='addObjectsToScrollList()')
-	removeButton = cmds.button('removeButton',l='Remove',h=50,w=50,c='removeObjectsFromScrollList()')
+	addButton = cmds.button('addButton',l='Add',h=50,w=50,c='ui.addObjectsToScrollList()')
+	removeButton = cmds.button('removeButton',l='Remove',h=50,w=50,c='ui.removeObjectsFromScrollList()')
 	#Unity export
 	sep3 = cmds.separator("sep3",height=4, style='in' )
 	versionLabel = cmds.text('versionLabel',label='Unity',w=40,al='left')
@@ -358,13 +218,13 @@ def IoM_exportAnim_window():
 		cmds.optionMenu('versionSelection',v=preferedVersion,e=True)
 	except:
 		pass
-	unityCheck = cmds.checkBox('unityCheck',l="",annotation="Generate Unity scene file",v=True,cc='disableMenu(\'unityCheck\',[\'versionSelection\'],[\'unityPath\'])')
-	unityPath = cmds.textFieldButtonGrp('unityPath',tx=myPath,buttonLabel='...',bc="browseToFolder()")
+	unityCheck = cmds.checkBox('unityCheck',l="",annotation="Generate Unity scene file",v=True,cc='ui.disableMenu(\'unityCheck\',[\'versionSelection\'],[\'unityPath\'])')
+	unityPath = cmds.textFieldButtonGrp('unityPath',tx=myPath,buttonLabel='...',bc="unity.browseToFolder()")
 	sep4 = cmds.separator("sep4",height=4, style='in' )
 	#Unity Set
 	setLabel = cmds.text('setLabel',label='Set',w=40,al='left')
-	setCheck = cmds.checkBox('setCheck',l="",annotation="Include Set",v=True,cc='disableMenu(\'setCheck\',[\'setSelection\'],[])')
-	sets = fileWrangle.listFiles('/Unity/Assets/Resources/Sets','prefab')
+	setCheck = cmds.checkBox('setCheck',l="",annotation="Include Set",v=True,cc='ui.disableMenu(\'setCheck\',[\'setSelection\'],[])')
+	sets = fileWrangle.listFiles('%s/Assets/Resources/Sets'%unity.getUnityProject(),'prefab')
 	sets = sorted(sets) #sort alphabetaclly 
 	setSelection = cmds.optionMenu('setSelection')
 	for s in sets:

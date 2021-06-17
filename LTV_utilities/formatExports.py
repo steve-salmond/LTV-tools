@@ -3,6 +3,7 @@ import LTV_utilities.fileWrangle as fileWrangle
 import os
 import tempfile
 from shutil import copyfile
+import unityConfig as unity
 
 def exportAsAlembic(abcFilename):
 
@@ -32,7 +33,7 @@ def exportAsAlembic(abcFilename):
 		endFrame = int(cmds.playbackOptions(q=True,maxTime=True))
 
 		#set folder to export to  
-		folderPath = '%s/Unity/Assets/Resources/%s'%(parentFolder,remainingPath)
+		folderPath = '%s/Assets/Resources/%s'%(unity.getUnityProject(),remainingPath)
 		if not os.path.exists(folderPath):
 			os.makedirs(folderPath)
 
@@ -100,7 +101,7 @@ def exportAnimation(obj):
 
 	#output name
 	parentFolder,remainingPath = fileWrangle.getParentFolder()
-	pathName = '%s/Unity/Assets/Resources/%s/%s'%(parentFolder,remainingPath,refFileName)
+	pathName = '%s/Assets/Resources/%s/%s'%(unity.getUnityProject(),remainingPath,refFileName)
 	#make folder if it doesn't exist
 	if not os.path.exists(pathName.rsplit('/',1)[0]):
 		os.makedirs(pathName.rsplit('/',1)[0])
@@ -117,3 +118,34 @@ def exportAnimation(obj):
 	cmds.file(rename=filename)
 
 	return obj,newName,remainingPath
+
+
+def copyUnityScene(unityVersion,unityEditorPath):
+	#get file/folder path
+	parentFolder,remainingPath = fileWrangle.getParentFolder()
+	filename = cmds.file(q=True,sn=True,shn=True)
+	#paths
+	unityTemplateFile = '%s/Assets/Scenes/Templates/shotTemplate.unity'%(unity.getUnityProject())
+	unitySceneFile = '%s/Assets/Scenes/%s/%s.unity'%(unity.getUnityProject(),remainingPath,filename.split('.')[0])
+	#make folder
+	folder = unitySceneFile.rsplit('/',1)[0]
+	if not os.path.exists(folder):
+		os.makedirs(folder)
+	
+	#make Unity Scene File
+	try:
+		projectPath = unity.getUnityProject()
+		scenePath = "Assets/Scenes/%s/%s.unity"%(remainingPath,filename.split('.')[0])
+		shotName = "%s"%filename.split('.')[0]
+		
+		if platform.system() == "Windows":
+			subprocess.Popen('\"%s/%s/Editor/Unity.exe\" -quit -batchmode -projectPath \"%s\" -executeMethod BuildSceneBatch.PerformBuild -shotName \"%s\" -scenePath \"%s\" '%(unityEditorPath,unityVersion,projectPath,shotName,scenePath),shell=True)
+		else:
+			subprocess.Popen('%s/%s/Unity.app/Contents/MacOS/Unity -quit -batchmode -projectPath %s -executeMethod BuildSceneBatch.PerformBuild -shotName \"%s\" -scenePath \"%s\" '%(unityEditorPath,unityVersion,projectPath,shotName,scenePath),shell=True)
+	except:
+		print "Unable to populate Unity scene file"
+		#copy blank Unity scene if auto population fails
+		try:
+			copyfile(unityTemplateFile, unitySceneFile)
+		except:
+			print "no Unity scene file created"
