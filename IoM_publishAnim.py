@@ -165,19 +165,30 @@ def prepFile(assetObject):
 			checkBox = cmds.rowLayout(r,ca=True,q=True)[0]
 			if cmds.checkBox(checkBox,v=True, q=True):
 				sel.append(assetObject[i])
-				deformationSystems.append('%s|*CC3_Skeleton'%assetObject[i])
+				deformationSystems.append('%s|*:CC3_Skeleton'%assetObject[i])
 
 		if sel:
+			#bake keys
+			cmds.bakeResults(deformationSystems,simulation=True,t=(startFrame,endFrame),hierarchy='below',sampleBy=1,oversamplingRate=1,disableImplicitControl=True,preserveOutsideKeys=True,sparseAnimCurveBake=False,removeBakedAttributeFromLayer=False,removeBakedAnimFromLayer=False,bakeOnOverrideLayer=False,minimizeRotation=True,controlPoints=False,shape=True)
+
 			#export animation one object at a time
 			for obj in sel:
+				refPath = cmds.referenceQuery( obj,filename=True ) #get reference filename
+				refNode = cmds.referenceQuery( obj,rfn=True ) #get name of reference node
+				cmds.file(refPath,ir=True,referenceNode=refNode) #import reference to scene
+				#remove namespace on skeleton
+				cmds.select('%s|*:CC3_Skeleton'%obj,r=True) #select skeleton
+				nodes = cmds.ls(sl=True,dag=True) #list chaild nodes
+				for n in nodes:
+					cmds.rename(n,n.split(":")[-1],ignoreShape=True) #rename child nodes
 				#do the export
+				print("obj = %s"%deformationSystems)
 				obj,newName,remainingPath = exp.exportAnimation(obj)
 				#make character dictionary
 				try:
 					#get REF filename
 					publishName = cmds.getAttr('%s.publishName'%obj)
 					#get asset type from parent folder
-					refPath = cmds.referenceQuery( obj,filename=True )
 					assetType = os.path.split(os.path.dirname(refPath))[1]
 					publishName = "%s/%s"%(assetType,publishName)
 				except:
@@ -240,15 +251,18 @@ def prepFile(assetObject):
 	jsonFileName  = ('%s.json'%(filename.rsplit('/',1)[-1].split('.')[0]))
 	
 	pathName = '%s/Unity/Assets/Resources/json/%s'%(parentFolder,jsonFileName)
-	os.mkdir('%s/Unity/Assets/Resources/json'%(parentFolder))
+	try:
+		os.mkdir('%s/Unity/Assets/Resources/json'%(parentFolder))
+	except:
+		pass
 	with open(pathName, mode='w') as feedsjson:
 		json.dump(sceneDict, feedsjson, indent=4, sort_keys=True)
 
 	#revert to pre baked file
-	try:
-		cmds.file(filename,open=True,force=True,iv=True)
-	except:
-		pass
+	#try:
+	#	cmds.file(filename,open=True,force=True,iv=True)
+	#except:
+	#	pass
 
 	#make new unity scene file
 	copyUnityScene()

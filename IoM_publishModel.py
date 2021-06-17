@@ -92,8 +92,9 @@ def makeFbx(refName,obj):
 
 	#export .fbx
 	#cmds.file(pathName,force=True,type='Fbx',pr=True,es=True,f=True)
-	cmds.FBXExportAnimationOnly("-v",True)
-	cmds.FBXExportUseSceneName ("-v",True)
+	cmds.FBXExportBakeComplexAnimation("-v",False)
+	cmds.FBXExportAnimationOnly("-v",False)
+	cmds.FBXExportUseSceneName ("-v",False)
 	cmds.FBXExport('-file', pathName,'-s')
 
 	#reselect initial selection
