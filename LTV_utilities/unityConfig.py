@@ -75,8 +75,19 @@ def browseToFolder():
 
 	jsonFileName  = '%s/LTV_prefs.json'%prefPath
 	#write json to disk
+	data = {}
+	try:
+		with open(jsonFileName) as json_data:
+			data = json.load(json_data)
+			json_data.close()
+			print(data)
+	except:
+		pass
+
 	with open(jsonFileName, mode='w') as feedsjson:
-		json.dump(userPrefsDict, feedsjson, indent=4, sort_keys=True)
+		data["unity"].update(userPrefsDict["unity"])
+		print(data)
+		json.dump(data, feedsjson, indent=4, sort_keys=True)
 
 	versions = getUnityVersions(folder[0])
 	menuItems = cmds.optionMenu('versionSelection', q=True, itemListLong=True)
