@@ -52,13 +52,14 @@ def findPublishedAssets():
 	assetFolders = fileWrangle.listFolders('maya/scenes/Models')
 	for t in allTransforms:
 		if cmds.attributeQuery( 'publishName', node=t, exists=True):
+			publishedName = cmds.getAttr("%s.publishName"%t)
 			#fullRefPath = cmds.referenceQuery( t, filename=True )
 			#parentFolder = fullRefPath.split('/')[-2]
 			#correctFile = 0
 			#if parentFolder in assetFolders:
 			correctFile = 1
 			t=t[1:]
-			publishedAssets.append({"transform":t,"correctFile":correctFile})
+			publishedAssets.append({"transform":t,"publishedName":publishedName,"correctFile":correctFile})
 		
 	return publishedAssets
 
@@ -169,7 +170,7 @@ def prepFile(assetObject):
 
 		if sel:
 			#bake keys
-			cmds.bakeResults(deformationSystems,simulation=True,t=(startFrame,endFrame),hierarchy='below',sampleBy=1,oversamplingRate=1,disableImplicitControl=True,preserveOutsideKeys=True,sparseAnimCurveBake=False,removeBakedAttributeFromLayer=False,removeBakedAnimFromLayer=False,bakeOnOverrideLayer=False,minimizeRotation=True,controlPoints=False,shape=True)
+			#cmds.bakeResults(deformationSystems,simulation=True,t=(startFrame,endFrame),hierarchy='below',sampleBy=1,oversamplingRate=1,disableImplicitControl=True,preserveOutsideKeys=True,sparseAnimCurveBake=False,removeBakedAttributeFromLayer=False,removeBakedAnimFromLayer=False,bakeOnOverrideLayer=False,minimizeRotation=True,controlPoints=False,shape=True)
 
 			#export animation one object at a time
 			for obj in sel:
@@ -320,6 +321,7 @@ def IoM_exportAnim_window():
 	duplicates = False
 	for asset in publishedAssets:
 		assetNames.append(asset["transform"].split(':')[-1])
+		assetNames.append(asset["publishedName"])
 	if len(assetNames) != len(set(assetNames)):
 		duplicates = True
 	boxLayout = cmds.columnLayout('boxLayout',columnAttach=('both', 5), rowSpacing=10, columnWidth=350 )
@@ -327,9 +329,9 @@ def IoM_exportAnim_window():
 		cmds.rowLayout(numberOfColumns=2)
 		publishedAsset.append(asset["transform"])
 		if duplicates == False:
-			cmds.checkBox(label=asset["transform"].split(':')[-1], annotation=asset["transform"],v=asset["correctFile"],onCommand='selRef(\"%s\")'%asset["transform"])
+			cmds.checkBox(label=asset["publishedName"], annotation=asset["transform"],v=asset["correctFile"],onCommand='selRef(\"%s\")'%asset["transform"])
 		else:
-			cmds.checkBox(label=asset["transform"], annotation=asset["transform"],v=asset["correctFile"],onCommand='selRef(\"%s\")'%asset["transform"])
+			cmds.checkBox(label=asset["publishedName"], annotation=asset["transform"],v=asset["correctFile"],onCommand='selRef(\"%s\")'%asset["transform"])
 
 		if asset["correctFile"] == 0:
 			#make button to show wrong REF
