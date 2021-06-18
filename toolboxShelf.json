@@ -12,39 +12,39 @@
 				"stp":"python"
 			},
 			{
-				"icon":["IoM_publishAnim.svg","IoMError.svg"],
+				"icon":["LTV_publishAnim.svg","IoMError.svg"],
 				"label":"Publish Anim",
-				"script":"IoM_publishAnim.py",
+				"script":"LTV_publishAnim.py",
 				"modules": ["baseIO/__init__.py","baseIO/sceneVar.py","baseIO/getProj.py","LTV_utilities/__init__.py","LTV_utilities/assetWrangle.py","LTV_utilities/camera.py","LTV_utilities/fileWrangle.py","LTV_utilities/formatExports.py","LTV_utilities/persistenceNode.py","LTV_utilities/uiAction.py","LTV_utilities/unityConfig.py"],
-				"command":"import IoM_publishAnim;from IoM_publishAnim import *;IoM_publishAnim.IoM_exportAnim()",
+				"command":"import LTV_publishAnim;from LTV_publishAnim import *;LTV_publishAnim.IoM_exportAnim()",
 				"stp":"python"
 			},
 			{
 				"icon":"separator"
 			},
 			{
-				"icon":"IoM_sceneSetup.svg",
+				"icon":"LTV_sceneSetup.svg",
 				"label":"Set up a scene",
-				"script":"IoM_sceneSetup.py",
+				"script":"LTV_sceneSetup.py",
 				"modules": ["baseIO/__init__.py","baseIO/sceneVar.py","baseIO/getProj.py"],
-				"command":"import IoM_sceneSetup;from IoM_sceneSetup import *;IoM_setup()",
+				"command":"import LTV_sceneSetup;from LTV_sceneSetup import *;IoM_setup()",
 				"stp":"python"
 			},
 			{
-				"icon":"IoM_playblast.svg",
+				"icon":"LTV_playblast.svg",
 				"label":"Quick Playblast",
-				"script":"IoM_playblast.py",
+				"script":"LTV_playblast.py",
 				"modules": ["baseIO/__init__.py","baseIO/sceneVar.py","baseIO/getProj.py"],
-				"command":"import IoM_playblast;IoM_playblast.setupDisplay()",
+				"command":"import LTV_playblast;LTV_playblast.setupDisplay()",
 				"stp":"python",
 				"menuItem":[
 					{
 						"label":"Playblast HUD",
-						"command":"import IoM_playblast;IoM_playblast.setHud()"
+						"command":"import LTV_playblast;LTV_playblast.setHud()"
 					},
 					{
 						"label":"Reset HUD",
-						"command":"import IoM_playblast;IoM_playblast.resetHud()"
+						"command":"import LTV_playblast;LTV_playblast.resetHud()"
 					}
 				]
 			},

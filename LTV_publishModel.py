@@ -6,6 +6,7 @@ import baseIO.getProj as getProj
 from shutil import copyfile
 import platform
 from LlamaIO import addAttribute
+import LTV_utilities.unityConfig as unity
 
 def cleanTexturePaths():
     fileNodes = cmds.ls(type='file')
