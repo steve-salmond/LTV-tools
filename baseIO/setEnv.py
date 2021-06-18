@@ -1,7 +1,7 @@
 import maya.cmds as cmds
 import os
 
-def updateEnvFile():
+def updateEnvFile(location):
 	#set maya env variable 
 	appPath = os.getenv('MAYA_APP_DIR') #path to documents/maya
 	v=cmds.about(version=True) #get maya version
@@ -11,7 +11,8 @@ def updateEnvFile():
 	replaced_content = ""
 
 	proj = cmds.workspace( q=True, directory=True, rd=True) #get project
-	scriptDir = '%sscripts'%proj #make script path
+	#scriptDir = '%sscripts'%proj #make script path
+	scriptDir = location
 	#update existing line
 	existingPythonPath = "" #switch if path already exists
 	for line in file_object:
@@ -35,3 +36,5 @@ def updateEnvFile():
 	file_object = open(envPath, 'w') #open file for writing
 	file_object.write(replaced_content) #write new content
 	file_object.close() #close file
+
+	

@@ -1,12 +1,30 @@
 global proc installToolbox()
 {
-	string $project = `workspace -q -dir -rd`;
 
-	string $command = "sys.path.append(\""+$project+"scripts\")";
+	string $installScriptLocation=`installScriptLocation`;
+	string $command = "sys.path.append(\""+$installScriptLocation+"\")";
 	print $command;
+	print("\n");
+
+	putenv "MAYA_SCRIPT_PATH" $installScriptLocation;
 
 	python "import sys";
 	python $command;
 	python ("import installToolbox;reload(installToolbox);from installToolbox import *;installToolbox.toolbox_install()");
 
 }
+
+global proc installScriptLocator (){}
+
+global proc string installScriptLocation ()
+{
+	string $whatIs=`whatIs installScriptLocator`;
+	string $fullPath=`substring $whatIs 25 999`;
+	string $buffer[];
+	int $numTok=`tokenize $fullPath "/" $buffer`;
+	int $numLetters=size($fullPath);
+	int $numLettersLastFolder=size($buffer[$numTok-1]);
+	string $scriptLocation=`substring $fullPath 1 ($numLetters-$numLettersLastFolder)`;
+	return $scriptLocation;
+}
+installToolbox();
