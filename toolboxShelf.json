@@ -62,6 +62,7 @@
 				"icon":"installToolbox.svg",
 				"label":"install or update toolbox",
 				"script":"installToolbox.mel",
+				"modules": ["toolboxShelf.json","installToolbox.mel","installToolbox.py"],
 				"command":"source installToolbox;installToolbox;",
 				"stp":"mel"
 			},
