@@ -3,7 +3,7 @@ import baseIO.sceneVar as sceneVar
 import baseIO.getProj as getProj
 import maya.mel as mel
 import os
-import baseIO.loadSave as IO
+#import baseIO.loadSave as IO
 from shutil import copyfile
 import json
 import platform

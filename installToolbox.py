@@ -311,6 +311,8 @@ def installToolboxWindow():
 	for i, part in enumerate(allparts):
 		if (i==0):
 			cmds.menuItem( label='Manually install scripts' )
+		if (i==1):
+			cmds.menuItem( label=os.path.realpath(__file__).rsplit('\\',1)[0] )
 		if (i<7):
 			isSystemPath = FilterOutSystemPaths(part)
 			if (isSystemPath == 0):

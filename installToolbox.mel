@@ -6,7 +6,7 @@ global proc installToolbox()
 	print $command;
 	print("\n");
 
-	putenv "MAYA_SCRIPT_PATH" $installScriptLocation;
+	//putenv "MAYA_SCRIPT_PATH" $installScriptLocation;
 
 	python "import sys";
 	python $command;
