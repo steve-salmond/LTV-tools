@@ -7,7 +7,7 @@
 				"icon":"IoM_publishModel.svg",
 				"label":"Publish Model",
 				"script":"IoM_publishModel.py",
-				"modules": ["LlamaIO/__init__.py","LlamaIO/LlamaUtil.py","baseIO/getProj.py"],
+				"modules": ["LlamaIO/__init__.py","LlamaIO/LlamaUtil.py","LlamaIO/UserPrefs.py","baseIO/getProj.py"],
 				"command":"import IoM_publishModel;from IoM_publishModel import IO_publishModel_window;from IoM_publishModel import PublishModelCheckText;IoM_publishModel.IO_publishModel(0)",
 				"stp":"python"
 			},
