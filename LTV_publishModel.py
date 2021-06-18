@@ -83,7 +83,7 @@ def makeFbx(refName,obj):
 	parentFolder,remainingPath = getParentFolder()
 	
 	#output name
-	pathName = '%s/Unity/Assets/Resources/%s/%s'%(parentFolder,remainingPath.rsplit('/',1)[0],refFileName)
+	pathName = '%s/Assets/Resources/%s/%s'%(unity.getUnityProject(),remainingPath.rsplit('/',1)[0],refFileName)
 	if not os.path.exists(pathName.rsplit('/',1)[0]):
 		os.makedirs(pathName.rsplit('/',1)[0])
 
@@ -163,7 +163,7 @@ def PublishModelCheckText():
 		makeRefLog = [0,0,0]
 		cmds.select(tempSelect,r=True)
 		#connect blendshape geo to rig
-		bodyRig = '|%s|DeformationSystem'%tempSelect[0]
+		bodyRig = '|%s|CC3_Skeleton'%tempSelect[0]
 		blendshapes = findGeoWithBlendShapes()
 		for b in blendshapes:
 			connectAttribute(b,'message',bodyRig,b)

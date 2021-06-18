@@ -4,11 +4,11 @@
 		],
 		"buttons": [
 			{
-				"icon":"IoM_publishModel.svg",
+				"icon":"LTV_publishModel.svg",
 				"label":"Publish Model",
-				"script":"IoM_publishModel.py",
+				"script":"LTV_publishModel.py",
 				"modules": ["LlamaIO/__init__.py","LlamaIO/LlamaUtil.py","LlamaIO/UserPrefs.py","baseIO/getProj.py"],
-				"command":"import IoM_publishModel;from IoM_publishModel import IO_publishModel_window;from IoM_publishModel import PublishModelCheckText;IoM_publishModel.IO_publishModel(0)",
+				"command":"import LTV_publishModel;from LTV_publishModel import IO_publishModel_window;from LTV_publishModel import PublishModelCheckText;LTV_publishModel.IO_publishModel(0)",
 				"stp":"python"
 			},
 			{

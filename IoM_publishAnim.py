@@ -133,10 +133,10 @@ def prepFile(assetObject):
 		json.dump(sceneDict, feedsjson, indent=4, sort_keys=True)
 
 	#revert to pre baked file
-	#try:
-	#	cmds.file(filename,open=True,force=True,iv=True)
-	#except:
-	#	pass
+	try:
+		cmds.file(filename,open=True,force=True,iv=True)
+	except:
+		pass
 
 	#make new unity scene file
 	#get version of Unity from selection menu

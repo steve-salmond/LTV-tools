@@ -246,8 +246,8 @@ def CheckText():
 
 	file_path = os.path.realpath(__file__) #get file location of current script
 	#print file_path.rsplit('\\',1)[0]
-	updateEnvFile("PYTHONPATH",file_path.rsplit('\\',1)[0]) #update .env file
-	updateEnvFile("MAYA_SCRIPT_PATH",file_path.rsplit('\\',1)[0]) #update .env file
+	updateEnvFile("PYTHONPATH",file_path.rsplit('\\',1)[0].rsplit('/',1)[0]) #update .env file
+	updateEnvFile("MAYA_SCRIPT_PATH",file_path.rsplit('\\',1)[0].rsplit('/',1)[0]) #update .env file
 
 def FilterOutSystemPaths(path):
 	systemPath  = 0
@@ -312,8 +312,8 @@ def installToolboxWindow():
 	for i, part in enumerate(allparts):
 		if (i==0):
 			cmds.menuItem( label='Manually install scripts' )
-		if (i==1):
-			cmds.menuItem( label=os.path.realpath(__file__).rsplit('\\',1)[0] )
+		if (i==0):
+			cmds.menuItem( label=os.path.realpath(__file__).rsplit('\\',1)[0].rsplit('/',1)[0])
 		if (i<7):
 			isSystemPath = FilterOutSystemPaths(part)
 			if (isSystemPath == 0):

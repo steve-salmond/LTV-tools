@@ -9,10 +9,15 @@ import LTV_utilities.fileWrangle as fileWrangle
 def preferedUnityVersion():
 	projPath = getProj.getProject()
 	settingsFile = '%sdata/projectSettings.json'%(projPath)
-	with open(settingsFile) as json_data:
-		data = json.load(json_data)
-		json_data.close()
-		return (data['unity']['preferedVersion'])
+	preferedVersion = "No prefered version set"
+	try:
+		with open(settingsFile) as json_data:
+			data = json.load(json_data)
+			json_data.close()
+			preferedVersion = (data['unity']['preferedVersion'])
+	except:
+		print("Project settings not found, make sure you have set your project")
+	return preferedVersion
 
 def getUnityProject():
 	prefPath = fileWrangle.userPrefsPath()
