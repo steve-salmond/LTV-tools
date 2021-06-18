@@ -7,7 +7,7 @@ import os
 import urllib2
 from collections import OrderedDict
 
-def updateEnvFile(location):
+def updateEnvFile(envVar,location):
 	#set maya env variable 
 	appPath = os.getenv('MAYA_APP_DIR') #path to documents/maya
 	v=cmds.about(version=True) #get maya version
@@ -23,7 +23,7 @@ def updateEnvFile(location):
 	existingPythonPath = "" #switch if path already exists
 	for line in file_object:
 	    line = line.strip() #remove whitespace
-	    if "PYTHONPATH" in line and line[0] != "\\": 
+	    if envVar in line and line[0] != "\\": 
 	        existingPythonPath = line 
 	        paths = line.split("=",1)[1] 
 	        paths = paths.strip() #remove extra whitespace
@@ -31,11 +31,11 @@ def updateEnvFile(location):
 	        pathList.append(scriptDir) #add new path to list
 	        pathList = list(dict.fromkeys(pathList)) #remove duplicates from list
 	        pathString = ';'.join(pathList) #rebuild list as string
-	        line = "PYTHONPATH = %s"%pathString #build replacement line
+	        line = "%s = %s"%(envVar,pathString) #build replacement line
 	    replaced_content = replaced_content + line + "\n" #rebuild whole file
 	#add new line
 	if not existingPythonPath: #if there is not already a python path set
-	    replaced_content = replaced_content + "PYTHONPATH = %s"%scriptDir #add line
+	    replaced_content = replaced_content + "%s = %s"%(envVar,scriptDir) #add line
 	file_object.close() #close file
 
 	#write new content to file
@@ -246,7 +246,8 @@ def CheckText():
 
 	file_path = os.path.realpath(__file__) #get file location of current script
 	#print file_path.rsplit('\\',1)[0]
-	updateEnvFile(file_path.rsplit('\\',1)[0]) #update .env file
+	updateEnvFile("PYTHONPATH",file_path.rsplit('\\',1)[0]) #update .env file
+	updateEnvFile("MAYA_SCRIPT_PATH",file_path.rsplit('\\',1)[0]) #update .env file
 
 def FilterOutSystemPaths(path):
 	systemPath  = 0
