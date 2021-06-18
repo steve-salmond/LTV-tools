@@ -26,7 +26,7 @@ def createFilePrefs():
 	else:
 		iomPrefNode = 'LTV_filePrefs'
 	
-	profileName = cmds.optionMenu('postProfileSelection',q=True,v=True)
-	addAttrPlus(iomPrefNode,'profileName',profileName)
+	#profileName = cmds.optionMenu('postProfileSelection',q=True,v=True)
+	#addAttrPlus(iomPrefNode,'profileName',profileName)
 	setName = cmds.optionMenu('setSelection',q=True,v=True)
 	addAttrPlus(iomPrefNode,'setName',setName)

@@ -3,7 +3,6 @@ import baseIO.sceneVar as sceneVar
 import baseIO.getProj as getProj
 import maya.mel as mel
 import os
-#import baseIO.loadSave as IO
 from shutil import copyfile
 import json
 import platform
@@ -72,25 +71,8 @@ def prepFile(assetObject):
 
 	### --- CAMERA --- ###
 
-	#add camera and post profile
+	#add camera 
 	cameraName = cmds.optionMenu('cameraSelection',q=True,v=True)
-	postProfile = cmds.optionMenu('postProfileSelection',q=True,v=True)
-	print 'From selection %s'%postProfile
-	setName = cmds.optionMenu('setSelection',q=True,v=True)
-	if postProfile == 'From Set': #if no post profile is selected
-		postProfile = '%s_PostProfile'%(setName) #set it as the set name
-	if postProfile == 'No Profile':
-		postProfile = '' #no profile should be used
-	else:
-		postProfile = 'Profiles/%s'%postProfile #post profile is from ui
-	if postProfile:
-		try: #copy post profile file
-			postProfileTemplate = '%s/Assets/Resources/%s.asset'%(unity.getUnityProject(),postProfile) #path to template post process file
-			postProfileShot = '%s/Assets/Resources/Profiles/shotSpecific/%s.asset'%(unity.getUnityProject(),filename.rsplit('/',1)[-1].split('.')[0]) #path to new post process file
-			copyfile(postProfileTemplate, postProfileShot) #copy the file
-		except:
-			pass
-
 	if cameraName:
 		if len(cameraName) > 0:
 			newCamera = cam.parentNewCamera(cameraName)[0]
@@ -98,7 +80,7 @@ def prepFile(assetObject):
 			cmds.bakeResults(newCamera,simulation=True,t=(startFrame,endFrame),hierarchy='below',sampleBy=1,oversamplingRate=1,disableImplicitControl=True,preserveOutsideKeys=True,sparseAnimCurveBake=False,removeBakedAttributeFromLayer=False,removeBakedAnimFromLayer=False,bakeOnOverrideLayer=False,minimizeRotation=True,controlPoints=False,shape=True)
 
 			obj,newName,remainingPath = exp.exportAnimation(newCamera)
-			camDict = {"name":  "CAM","model": "%s/%s"%(remainingPath,newName.split('/')[-1]),"anim":"%s/%s"%(remainingPath,newName.split('/')[-1]),"profile":postProfile}
+			camDict = {"name":  "CAM","model": "%s/%s"%(remainingPath,newName.split('/')[-1]),"anim":"%s/%s"%(remainingPath,newName.split('/')[-1])}
 			sceneDict["cameras"].append(camDict) #add to scene dictionary
 
 
@@ -120,8 +102,7 @@ def prepFile(assetObject):
 	parentFolder,remainingPath = fileWrangle.getParentFolder()
 	setProfiles = '%s/Assets/Resources/Sets/%s.json'%(unity.getUnityProject(),setName)
 
-
-	#write json file
+	### --- WRITE JSON --- ###
 	jsonFileName  = ('%s.json'%(filename.rsplit('/',1)[-1].split('.')[0]))
 	
 	pathName = '%s/Assets/Resources/json/%s'%(unity.getUnityProject(),jsonFileName)
@@ -138,175 +119,195 @@ def prepFile(assetObject):
 	except:
 		pass
 
-	#make new unity scene file
-	#get version of Unity from selection menu
-	unityVersion = cmds.optionMenu('versionSelection',v=True,q=True)
-	#check if checkBox is checked and a Unity version exists
-	if cmds.checkBox('unityCheck',v=True,q=True) and len(unityVersion) > 0:
-		unityEditorPath = cmds.textFieldButtonGrp('unityPath',q=True,tx=True)
-		exp.copyUnityScene(unityVersion,unityEditorPath)
+	### --- UNITY --- ###
+
+	unityVersion = cmds.optionMenu('versionSelection',v=True,q=True) #get version of Unity from selection menu
+	if cmds.checkBox('unityCheck',v=True,q=True) and len(unityVersion) > 0: #check if checkBox is checked and a Unity version exists
+		unityEditorPath = cmds.textFieldButtonGrp('unityPath',q=True,tx=True) #path to unity install
+		exp.copyUnityScene(unityVersion,unityEditorPath) #build the unity scene
 
 ###		UI		###
 
-
 def IoM_exportAnim_window():
-
-	#find all published objects by searching for the 'publishName' attribute
-	publishedAssets = assetWrangle.findPublishedAssets()
-
-	exportForm = cmds.formLayout()
+	exportForm = cmds.formLayout() #start form
+	#---------------------------------------------------------------------------------------------------------------------------------------------#
 	#Camera selection
-	cameraLabel = cmds.text('cameraLabel',label='Camera',w=40,al='left')
+	#variables
 	allCameras = cam.listAllCameras()
-	cameraSelection = cmds.optionMenu('cameraSelection')
+	#UI
+	cameraLabel = cmds.text('cameraLabel',label='Camera',w=40,al='left') #camera label
+	cameraSelection = cmds.optionMenu('cameraSelection') #make menu
 	for camera in allCameras:
-		cmds.menuItem(l=camera)
-	profiles = fileWrangle.listFiles('%s/Assets/Resources/Profiles'%unity.getUnityProject(),'asset')
-	profiles = ['From Set','No Profile'] + profiles
-	postProfileSelection = cmds.optionMenu('postProfileSelection')
-	for p in profiles:
-		cmds.menuItem(l=p)
-	preferedProfileName = persist.readFilePrefs('profileName')
-	try:
-		cmds.optionMenu('postProfileSelection',v=preferedProfileName,e=True)
-	except:
-		pass
-
-	#Asset export
-	sep_assets = cmds.separator("sep_assets",height=4, style='in' )
-	assetsLabel = cmds.text('assetsLabel',label='Assets',w=40,al='left')
-	publishedAsset = []
-	#check for duplicates
-	assetNames = []
-	duplicates = False
-	for asset in publishedAssets:
-		assetNames.append(asset["transform"].split(':')[-1])
-		assetNames.append(asset["publishedName"])
-	if len(assetNames) != len(set(assetNames)):
-		duplicates = True
-	boxLayout = cmds.columnLayout('boxLayout',columnAttach=('both', 5), rowSpacing=10, columnWidth=350 )
-	for asset in publishedAssets:
-		cmds.rowLayout(numberOfColumns=2)
-		publishedAsset.append(asset["transform"])
-		if duplicates == False:
-			cmds.checkBox(label=asset["publishedName"], annotation=asset["transform"],v=asset["correctFile"],onCommand='ui.selRef(\"%s\")'%asset["transform"])
-		else:
-			cmds.checkBox(label=asset["publishedName"], annotation=asset["transform"],v=asset["correctFile"],onCommand='ui.selRef(\"%s\")'%asset["transform"])
-
-		if asset["correctFile"] == 0:
-			#make button to show wrong REF
-			errorButton = cmds.iconTextButton( style='iconOnly', image1='IoMError.svg', label='spotlight',h=20,w=20,annotation='Incorrect file used' )
-			cmds.iconTextButton(errorButton,e=True,c='assetWrangle.fixRef(\"%s\",\"%s\")'%(asset["transform"],errorButton))
-		cmds.setParent( '..' )
-	cmds.setParent( '..' )
-	#Extras input
-	sep2 = cmds.separator("sep2",height=4, style='in' )
-	extrasLabel = cmds.text('extrasLabel',label='Extras',w=40,al='left')
-	extrasList = cmds.textScrollList('extrasList',numberOfRows=8, allowMultiSelection=True,height=102)
-	addButton = cmds.button('addButton',l='Add',h=50,w=50,c='ui.addObjectsToScrollList()')
-	removeButton = cmds.button('removeButton',l='Remove',h=50,w=50,c='ui.removeObjectsFromScrollList()')
-	#Unity export
-	sep3 = cmds.separator("sep3",height=4, style='in' )
-	versionLabel = cmds.text('versionLabel',label='Unity',w=40,al='left')
-	versionSelection = cmds.optionMenu('versionSelection')
-	myPath = unity.getUnityPath()
-	versions = unity.getUnityVersions(myPath)
-	for v in versions:
-		cmds.menuItem(l=v)
-	preferedVersion = unity.preferedUnityVersion()
-	try:
-		cmds.optionMenu('versionSelection',v=preferedVersion,e=True)
-	except:
-		pass
-	unityCheck = cmds.checkBox('unityCheck',l="",annotation="Generate Unity scene file",v=True,cc='ui.disableMenu(\'unityCheck\',[\'versionSelection\'],[\'unityPath\'])')
-	unityPath = cmds.textFieldButtonGrp('unityPath',tx=myPath,buttonLabel='...',bc="unity.browseToFolder()")
-	sep4 = cmds.separator("sep4",height=4, style='in' )
-	#Unity Set
-	setLabel = cmds.text('setLabel',label='Set',w=40,al='left')
-	setCheck = cmds.checkBox('setCheck',l="",annotation="Include Set",v=True,cc='ui.disableMenu(\'setCheck\',[\'setSelection\'],[])')
-	sets = fileWrangle.listFiles('%s/Assets/Resources/Sets'%unity.getUnityProject(),'prefab')
-	sets = sorted(sets) #sort alphabetaclly 
-	setSelection = cmds.optionMenu('setSelection')
-	for s in sets:
-		cmds.menuItem(l=s)
-	preferedSetName = persist.readFilePrefs('setName')
-	try:
-		cmds.optionMenu('setSelection',v=preferedSetName,e=True)
-	except:
-		pass
-	#Main buttons
-	Button1 = cmds.button('Button1',l='Publish',h=50,c='prepFile(%s)'%publishedAsset)
-	Button2 = cmds.button('Button2',l='Close',h=50,c='cmds.deleteUI(\'Publish Animation\')') 
-			 
+		cmds.menuItem(l=camera) #add cameras to menu
+	#UI layout
 	cmds.formLayout(
 		exportForm,
 		edit=True,
 		attachForm=[
 		(cameraLabel,'top',20),
 		(cameraSelection,'top',15),
-		(postProfileSelection,'top',15),
-		(postProfileSelection,'right',10),
+		(cameraSelection,'right',10),
 		(cameraLabel,'left',10),
+		(cameraSelection,'left',80)
+		])
+	#---------------------------------------------------------------------------------------------------------------------------------------------#
+	#Asset export
+	#variables
+	publishedAssets = assetWrangle.findPublishedAssets() #find all published objects by searching for the 'publishName' attribute
+	publishedAsset = [] #published asset null
+	#UI
+	sep_assets = cmds.separator("sep_assets",height=4, style='in' ) #top of assets section
+	assetsLabel = cmds.text('assetsLabel',label='Assets',w=40,al='left') #assets label
+	boxLayout = cmds.columnLayout('boxLayout',columnAttach=('both', 5), rowSpacing=10, columnWidth=350 ) #new box layout
+	for asset in publishedAssets: #for each asset
+		cmds.rowLayout(numberOfColumns=2) #new row layout
+		publishedAsset.append(asset["transform"]) #add transform to asset dictionary
+		cmds.checkBox(label=asset["publishedName"], annotation=asset["transform"],v=asset["correctFile"],onCommand='ui.selRef(\"%s\")'%asset["transform"]) #add checkbox
+		if asset["correctFile"] == 0:
+			errorButton = cmds.iconTextButton( style='iconOnly', image1='IoMError.svg', label='spotlight',h=20,w=20,annotation='Incorrect file used' ) #make error button if using the wrong reference file
+			cmds.iconTextButton(errorButton,e=True,c='assetWrangle.fixRef(\"%s\",\"%s\")'%(asset["transform"],errorButton)) #add fix command to error button
+		cmds.setParent( '..' )
+	cmds.setParent( '..' )
+	#UI layout
+	cmds.formLayout(
+		exportForm,
+		edit=True,
+		attachForm=[
 		(sep_assets,'right',10),
 		(sep_assets,'left',10),
+		(sep_assets,'top',60),
 		(assetsLabel,'left',10),
+		(boxLayout,'left',80),
+		],
+		attachControl=[
+		(assetsLabel,'top',20,sep_assets),
+		(boxLayout,'top',20,sep_assets),
+		])
+	#---------------------------------------------------------------------------------------------------------------------------------------------#
+	#Extras input
+	#UI
+	sep2 = cmds.separator("sep2",height=4, style='in' )
+	extrasLabel = cmds.text('extrasLabel',label='Extras',w=40,al='left')
+	extrasList = cmds.textScrollList('extrasList',numberOfRows=8, allowMultiSelection=True,height=102)
+	addButton = cmds.button('addButton',l='Add',h=50,w=50,c='ui.addObjectsToScrollList()')
+	removeButton = cmds.button('removeButton',l='Remove',h=50,w=50,c='ui.removeObjectsFromScrollList()')
+	#UI layout
+	cmds.formLayout(
+		exportForm,
+		edit=True,
+		attachForm=[
 		(extrasLabel,'left',10),
-		(extrasList,'left',10),
+		(extrasList,'left',80),
 		(addButton,'right',10),
 		(removeButton,'right',10),
 		(sep2,'right',10),
-		(sep2,'left',10),
+		(sep2,'left',10)
+		],
+		attachControl=[
+		(sep2,'top',20,boxLayout),
+		(extrasLabel,'top',40,boxLayout),
+		(extrasList,'top',40,boxLayout),
+		(extrasList,'right',10,addButton),
+		(addButton,'top',40,boxLayout),
+		(removeButton,'top',2,addButton)
+		])
+	#---------------------------------------------------------------------------------------------------------------------------------------------#
+	#Environment
+	#variables
+	sets = fileWrangle.listFiles('%s/Assets/Resources/Sets'%unity.getUnityProject(),'prefab') #list all the environments in the Unity project
+	sets = sorted(sets) #sort alphabetaclly #sort the environments
+	#UI
+	sep3 = cmds.separator("sep3",height=4, style='in' )
+	setLabel = cmds.text('setLabel',label='Environment',w=70,al='left') #Environment label
+	setCheck = cmds.checkBox('setCheck',l="",annotation="Include Set",v=True,cc='ui.disableMenu(\'setCheck\',[\'setSelection\'],[])') #Environment checkbox
+	setSelection = cmds.optionMenu('setSelection') #make environment dropdown menu
+	for s in sets:
+		cmds.menuItem(l=s) #add environments to menu
+	preferedSetName = persist.readFilePrefs('setName') #get set from previous save
+	try:
+		cmds.optionMenu('setSelection',v=preferedSetName,e=True) #set the set name if it's in the list
+	except:
+		pass
+	#UI layout
+	cmds.formLayout(
+		exportForm,
+		edit=True,
+		attachForm=[
 		(sep3,'right',10),
 		(sep3,'left',10),
-		(versionLabel,'left',10),
-		(versionSelection,'right',10),
-		(unityPath,'right',10),
+		(sep3,'bottom',200),
+		(setLabel,'left',10),
+		(setCheck,'left',80),
+		(setSelection,'right',10)
+		],
+		attachControl=[
+		(setLabel,'top',20,sep3),
+		(setCheck,'top',20,sep3),
+		(setSelection,'top',16,sep3),
+		(setSelection,'left',10,setCheck)
+		])
+	#---------------------------------------------------------------------------------------------------------------------------------------------#
+	#Unity export
+	#variables
+	myPath = unity.getUnityPath() #get path to unity install
+	versions = unity.getUnityVersions(myPath) #list installed versions
+	#UI
+	sep4 = cmds.separator("sep4",height=4, style='in' ) #top of unity section
+	versionLabel = cmds.text('versionLabel',label='Unity',w=40,al='left') #Unity label
+	versionSelection = cmds.optionMenu('versionSelection') #version dropdown menu
+	for v in versions:
+		cmds.menuItem(l=v) #add versions to menu
+	preferedVersion = unity.preferedUnityVersion()	#look for a prefered version of unity
+	try:
+		cmds.optionMenu('versionSelection',v=preferedVersion,e=True) #set the prefered version if it exists
+	except:
+		pass
+	unityCheck = cmds.checkBox('unityCheck',l="",annotation="Generate Unity scene file",v=True,cc='ui.disableMenu(\'unityCheck\',[\'versionSelection\'],[\'unityPath\'])') #checkbox to make unity file
+	unityPath = cmds.textFieldButtonGrp('unityPath',tx=myPath,buttonLabel='...',bc="unity.browseToFolder()") #textfield button to set path to unity
+	#UI layout
+	cmds.formLayout(
+		exportForm,
+		edit=True,
+		attachForm=[
 		(sep4,'right',10),
 		(sep4,'left',10),
-		(setLabel,'left',10),
-		(setSelection,'right',10),
+		(sep4,'bottom',140),
+		(versionLabel,'left',10),
+		(versionSelection,'right',10),
+		(unityCheck,'left',80),
+		(unityPath,'left',100),
+		(unityPath,'right',10)
+		],
+		attachControl=[
+		(versionLabel,'top',20,sep4),
+		(versionSelection,'top',50,sep4),
+		(versionSelection,'left',60,versionLabel),
+		(unityPath,'top',16,sep4),
+		
+		(unityCheck,'top',20,sep4)
+		])
+	#---------------------------------------------------------------------------------------------------------------------------------------------#
+	#Main buttons
+	Button1 = cmds.button('Button1',l='Publish',h=50,c='prepFile(%s)'%publishedAsset)
+	Button2 = cmds.button('Button2',l='Close',h=50,c='cmds.deleteUI(\'Publish Animation\')') 
+	#UI layout
+	cmds.formLayout(
+		exportForm,
+		edit=True,
+		attachForm=[
 		(Button1,'bottom',0),
 		(Button1,'left',0),
 		(Button2,'bottom',0),
 		(Button2,'right',0)
 		],
 		attachControl=[
-		(cameraSelection,'left',40,cameraLabel),
-		(postProfileSelection,'left',0,cameraSelection),
-		(sep_assets,'top',60,cameraLabel),
-		(assetsLabel,'top',20,sep_assets),
-		(boxLayout,'top',20,sep_assets),
-		(boxLayout,'left',40,cameraLabel),
-		(sep2,'top',20,boxLayout),
-		(extrasLabel,'top',40,boxLayout),
-		(extrasList,'top',40,boxLayout),
-		(extrasList,'right',10,addButton),
-		(extrasList,'left',40,cameraLabel),
-		(extrasList,'bottom',10,sep3),
-		(addButton,'top',40,boxLayout),
-		(removeButton,'top',2,addButton),
-		(sep3,'bottom',60,sep4),
-		(versionLabel,'top',20,sep4),
-		(unityCheck,'left',40,versionLabel),
-		(versionSelection,'top',50,sep4),
-		(versionSelection,'left',60,versionLabel),
-		(unityPath,'top',16,sep4),
-		(unityPath,'left',60,versionLabel),
-		(unityCheck,'top',20,sep4),
-		(sep4,'bottom',100,Button1),
-		(setLabel,'top',20,sep3),
-		(setCheck,'top',20,sep3),
-		(setCheck,'left',40,setLabel),
-		(setSelection,'top',16,sep3),
-		(setSelection,'left',60,setLabel),
 		(Button2,'left',0,Button1)
 		],
 		attachPosition=[
-		(Button1,'right',0,50),
-		(cameraSelection,'right',0,60)
+		(Button1,'right',0,50)
 		])
 
-	exportForm
+	exportForm #finish the form
 
 def IoM_exportAnim():
 
