@@ -69,7 +69,7 @@ def exportAsAlembic(abcFilename):
 	return returnString
 
 #export fbx
-def exportAnimation(obj):
+def exportAnimation(obj,animOnly):
 	#rename file temporarily
 	filename = cmds.file(q=True,sn=True)
 	#objName = obj.split('|')[-1].split(':')[-1]
@@ -111,7 +111,7 @@ def exportAnimation(obj):
 	#export fbx
 	#cmds.file(pathName,force=True,type='FBX export',relativeNamespace=ns,es=True)
 	cmds.FBXExportBakeComplexAnimation("-v",True)
-	cmds.FBXExportAnimationOnly("-v",True)
+	cmds.FBXExportAnimationOnly("-v",animOnly)
 	cmds.FBXExportUseSceneName ("-v",True)
 	cmds.FBXExport('-file', pathName,'-s')
 	#restore the filename

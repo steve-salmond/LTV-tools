@@ -17,12 +17,9 @@ import LTV_utilities.unityConfig as unity
 import LTV_utilities.assetWrangle as assetWrangle
 import LTV_utilities.uiAction as ui
 		
-
 def prepFile(assetObject):
-
 	persist.createFilePrefs() #make a node to save ui settings in the scene
 	filename = cmds.file(save=True) #save the scene file
-
 	parentFolder,remainingPath = fileWrangle.getParentFolder() #get the path to parent folder
 	startFrame = sceneVar.getStartFrame() #start frame
 	endFrame = sceneVar.getEndFrame() #end frame
@@ -53,7 +50,7 @@ def prepFile(assetObject):
 					cmds.rename(n,n.split(":")[-1],ignoreShape=True) #rename child nodes
 				#do the export
 				print("obj = %s"%deformationSystems)
-				obj,newName,remainingPath = exp.exportAnimation(obj)
+				obj,newName,remainingPath = exp.exportAnimation(obj,True)
 				#make character dictionary
 				try:
 					#get REF filename
@@ -71,18 +68,14 @@ def prepFile(assetObject):
 
 	### --- CAMERA --- ###
 
-	#add camera 
-	cameraName = cmds.optionMenu('cameraSelection',q=True,v=True)
+	cameraName = cmds.optionMenu('cameraSelection',q=True,v=True) #get camera from menu
 	if cameraName:
-		if len(cameraName) > 0:
-			newCamera = cam.parentNewCamera(cameraName)[0]
-			#bake keys
-			cmds.bakeResults(newCamera,simulation=True,t=(startFrame,endFrame),hierarchy='below',sampleBy=1,oversamplingRate=1,disableImplicitControl=True,preserveOutsideKeys=True,sparseAnimCurveBake=False,removeBakedAttributeFromLayer=False,removeBakedAnimFromLayer=False,bakeOnOverrideLayer=False,minimizeRotation=True,controlPoints=False,shape=True)
-
-			obj,newName,remainingPath = exp.exportAnimation(newCamera)
-			camDict = {"name":  "CAM","model": "%s/%s"%(remainingPath,newName.split('/')[-1]),"anim":"%s/%s"%(remainingPath,newName.split('/')[-1])}
+		if len(cameraName) > 0: #check if a camera has been selected
+			newCamera = cam.parentNewCamera(cameraName)[0] #parent a new camera to work around grouping and scaling
+			cmds.bakeResults(newCamera,simulation=True,t=(startFrame,endFrame),hierarchy='below',sampleBy=1,oversamplingRate=1,disableImplicitControl=True,preserveOutsideKeys=True,sparseAnimCurveBake=False,removeBakedAttributeFromLayer=False,removeBakedAnimFromLayer=False,bakeOnOverrideLayer=False,minimizeRotation=True,controlPoints=False,shape=True) #bake camera keys
+			obj,newName,remainingPath = exp.exportAnimation(newCamera,False) #export the camera animation
+			camDict = {"name":  "CAM","model": "%s/%s"%(remainingPath,newName.split('/')[-1]),"anim":"%s/%s"%(remainingPath,newName.split('/')[-1])} #make a camera dictionary
 			sceneDict["cameras"].append(camDict) #add to scene dictionary
-
 
 	### --- EXTRAS --- ###
 
@@ -103,19 +96,16 @@ def prepFile(assetObject):
 	setProfiles = '%s/Assets/Resources/Sets/%s.json'%(unity.getUnityProject(),setName)
 
 	### --- WRITE JSON --- ###
-	jsonFileName  = ('%s.json'%(filename.rsplit('/',1)[-1].split('.')[0]))
-	
-	pathName = '%s/Assets/Resources/json/%s'%(unity.getUnityProject(),jsonFileName)
+	jsonFileName  = ('%s.json'%(filename.rsplit('/',1)[-1].split('.')[0])) #name json file based on scene file name
+	pathName = '%s/Assets/Resources/json/%s'%(unity.getUnityProject(),jsonFileName) #find the correct path for the file to go
 	try:
-		os.mkdir('%s/Assets/Resources/json'%(unity.getUnityProject()))
+		os.mkdir('%s/Assets/Resources/json'%(unity.getUnityProject())) #make the folder if it doesn't exist
 	except:
 		pass
-	with open(pathName, mode='w') as feedsjson:
-		json.dump(sceneDict, feedsjson, indent=4, sort_keys=True)
-
-	#revert to pre baked file
+	with open(pathName, mode='w') as feedsjson: #open the file for writing
+		json.dump(sceneDict, feedsjson, indent=4, sort_keys=True) #write dictionary out to file
 	try:
-		cmds.file(filename,open=True,force=True,iv=True)
+		cmds.file(filename,open=True,force=True,iv=True) #revert to pre baked file
 	except:
 		pass
 
