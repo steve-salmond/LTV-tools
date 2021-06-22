@@ -85,7 +85,8 @@ def exportAnimation(obj,animOnly):
 
 	#select object to export
 	try:
-		exportObject = '%s|*CC3_Skeleton'%(obj)
+		exportObject = '%s|*CC_Base_BoneRoot'%(obj)
+		exportObject = cmds.parent(exportObject, world=True)
 		cmds.select(exportObject,r=True)
 	except:
 		exportObject = obj

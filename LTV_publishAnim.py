@@ -36,7 +36,7 @@ def prepFile(assetObject):
 			checkBox = cmds.rowLayout(r,ca=True,q=True)[0] 
 			if cmds.checkBox(checkBox,v=True, q=True):
 				sel.append(assetObject[i]) #add asset if it's checked
-				deformationSystems.append('%s|*:CC3_Skeleton'%assetObject[i]) #find rig of the asset and add it
+				deformationSystems.append('%s|*:CC_Base_BoneRoot'%assetObject[i]) #find rig of the asset and add it
 		if sel: 
 			#export animation one object at a time
 			for obj in sel:
@@ -44,8 +44,8 @@ def prepFile(assetObject):
 				refNode = cmds.referenceQuery( obj,rfn=True ) #get name of reference node
 				cmds.file(refPath,ir=True,referenceNode=refNode) #import reference to scene
 				#remove namespace on skeleton
-				cmds.select('%s|*:CC3_Skeleton'%obj,r=True) #select skeleton
-				nodes = cmds.ls(sl=True,dag=True) #list chaild nodes
+				cmds.select('%s|*:CC_Base_BoneRoot'%obj,r=True) #select skeleton
+				nodes = cmds.ls(sl=True,dag=True) #list child nodes
 				for n in nodes:
 					cmds.rename(n,n.split(":")[-1],ignoreShape=True) #rename child nodes
 				#do the export
@@ -65,6 +65,7 @@ def prepFile(assetObject):
 				displayName = re.split('\d+', newName)[-1][1:]
 				charDict = {"name":  displayName,"model": publishName,"anim": "%s/%s"%(remainingPath,newName.split('/')[-1])}
 				sceneDict["characters"].append(charDict) #add to scene dictionary
+
 
 	### --- CAMERA --- ###
 
@@ -105,7 +106,8 @@ def prepFile(assetObject):
 	with open(pathName, mode='w') as feedsjson: #open the file for writing
 		json.dump(sceneDict, feedsjson, indent=4, sort_keys=True) #write dictionary out to file
 	try:
-		cmds.file(filename,open=True,force=True,iv=True) #revert to pre baked file
+		#cmds.file(filename,open=True,force=True,iv=True) #revert to pre baked file
+		print("Debug")
 	except:
 		pass
 

@@ -74,7 +74,9 @@ def getParentFolder():
 def makeFbx(refName,obj):
 	#unparent rig and geo
 	geo = '|%s|Geometry'%obj
-	bodyRig = '|%s|CC3_Skeleton'%obj
+	bodyRig = '|%s|CC_Base_BoneRoot'%obj #find skeleton
+	cmds.parent( bodyRig, world=True ) #parent to world
+	bodyRig = 'CC_Base_BoneRoot' #re-define skeleton object
 
 	#export fbx
 	#define full file name
@@ -100,6 +102,8 @@ def makeFbx(refName,obj):
 
 	#reselect initial selection
 	cmds.select(obj,r=True)
+
+	cmds.parent( bodyRig, obj ) #parent back in hierarchy
 
 #export .ma
 def makeRef(refName,publishString):
@@ -164,7 +168,7 @@ def PublishModelCheckText():
 		makeRefLog = [0,0,0]
 		cmds.select(tempSelect,r=True)
 		#connect blendshape geo to rig
-		bodyRig = '|%s|CC3_Skeleton'%tempSelect[0]
+		bodyRig = '|%s|CC_Base_BoneRoot'%tempSelect[0]
 		blendshapes = findGeoWithBlendShapes()
 		for b in blendshapes:
 			connectAttribute(b,'message',bodyRig,b)
