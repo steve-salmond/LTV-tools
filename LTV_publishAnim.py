@@ -1,6 +1,7 @@
 import maya.cmds as cmds
 import baseIO.sceneVar as sceneVar
 import baseIO.getProj as getProj
+import baseIO.loadSave as loadSave
 import maya.mel as mel
 import os
 from shutil import copyfile
@@ -24,6 +25,11 @@ def prepFile(assetObject):
 	startFrame = sceneVar.getStartFrame() #start frame
 	endFrame = sceneVar.getEndFrame() #end frame
 
+	blendGeo = [] #hold blendshapes
+	blendShapes = cmds.ls(type='blendShape') #find all blendshapes
+	cmds.bakeResults(blendShapes,simulation=True,t=(startFrame,endFrame),hierarchy='below',sampleBy=1,oversamplingRate=1,disableImplicitControl=True,preserveOutsideKeys=True,sparseAnimCurveBake=False,removeBakedAttributeFromLayer=False,removeBakedAnimFromLayer=False,bakeOnOverrideLayer=False,minimizeRotation=True,controlPoints=False,shape=True)
+
+
 	### --- ASSETS --- ###
 
 	#add objects to selection if they are checked
@@ -43,14 +49,36 @@ def prepFile(assetObject):
 				refPath = cmds.referenceQuery( obj,filename=True ) #get reference filename
 				refNode = cmds.referenceQuery( obj,rfn=True ) #get name of reference node
 				cmds.file(refPath,ir=True,referenceNode=refNode) #import reference to scene
+
+				ns = obj.split(":")[0].split("|")[-1]
+				objName = obj.split("|")[-1]
+				print("objName = %s"%objName)
+
+				grp = cmds.group(em=True,n=ns)
+				p = cmds.parent(obj,grp)
+
+				cmds.namespace(moveNamespace=(ns,":"),force=True)
+				resolvedObjName = '%s|%s'%(grp,objName)
+				print resolvedObjName
+				skeleton = "%s|CC_Base_BoneRoot"%resolvedObjName
+				s = cmds.parent(skeleton,grp)
+
+				childGeo = cmds.listRelatives('%s|Geometry'%resolvedObjName,c=True,f=True)
+				for c in childGeo:
+					cmds.parent(c,grp) #parent to new group
+
+				outfitName = cmds.optionMenu('outfitSelection',q=True,v=True) #get camera from menu
+				print outfitName
+
 				#remove namespace on skeleton
-				cmds.select('%s|*:CC_Base_BoneRoot'%obj,r=True) #select skeleton
-				nodes = cmds.ls(sl=True,dag=True) #list child nodes
-				for n in nodes:
-					cmds.rename(n,n.split(":")[-1],ignoreShape=True) #rename child nodes
+				#cmds.select('%s|*:CC_Base_BoneRoot'%obj,r=True) #select skeleton
+				#cmds.select('%s|*:Geometry'%obj,add=True) #add geo
+				#nodes = cmds.ls(sl=True,dag=True) #list child nodes
+				#for n in nodes:
+					#cmds.rename(n,n.split(":")[-1],ignoreShape=True) #rename child nodes
 				#do the export
 				print("obj = %s"%deformationSystems)
-				obj,newName,remainingPath = exp.exportAnimation(obj,True)
+				obj,newName,remainingPath = exp.exportAnimation(grp,False)
 				#make character dictionary
 				try:
 					#get REF filename
@@ -63,7 +91,7 @@ def prepFile(assetObject):
 					publishName = "%s/%s"%(remainingPath,newName.split('/')[-1])
 				#format json
 				displayName = re.split('\d+', newName)[-1][1:]
-				charDict = {"name":  displayName,"model": publishName,"anim": "%s/%s"%(remainingPath,newName.split('/')[-1])}
+				charDict = {"name":  displayName,"model": publishName,"anim": "%s/%s"%(remainingPath,newName.split('/')[-1]),"outfit": "foobar"}
 				sceneDict["characters"].append(charDict) #add to scene dictionary
 
 
@@ -147,6 +175,7 @@ def IoM_exportAnim_window():
 	#variables
 	publishedAssets = assetWrangle.findPublishedAssets() #find all published objects by searching for the 'publishName' attribute
 	publishedAsset = [] #published asset null
+	unityPath = unity.getUnityProject()
 	#UI
 	sep_assets = cmds.separator("sep_assets",height=4, style='in' ) #top of assets section
 	assetsLabel = cmds.text('assetsLabel',label='Assets',w=40,al='left') #assets label
@@ -154,7 +183,20 @@ def IoM_exportAnim_window():
 	for asset in publishedAssets: #for each asset
 		cmds.rowLayout(numberOfColumns=2) #new row layout
 		publishedAsset.append(asset["transform"]) #add transform to asset dictionary
+		charName = asset["transform"].split(':')[-1] #get characters name 
+		f = "%s/Assets/Characters/Json/%s.json"%(unity.getUnityProject(),charName)
+		outfitNames = []
+		try:
+			charDict = loadSave.loadJSON(f)
+			outfits = charDict["outfits"]
+			outfitNames = [li["name"] for li in outfits]
+		except:
+			pass
+		
 		cmds.checkBox(label=asset["publishedName"], annotation=asset["transform"],v=asset["correctFile"],onCommand='ui.selRef(\"%s\")'%asset["transform"]) #add checkbox
+		outfitSelection = cmds.optionMenu('outfitSelection') #make outfit menu
+		for outfit in outfitNames:
+			cmds.menuItem(l=outfit) #add outfit to menu
 		if asset["correctFile"] == 0:
 			errorButton = cmds.iconTextButton( style='iconOnly', image1='IoMError.svg', label='spotlight',h=20,w=20,annotation='Incorrect file used' ) #make error button if using the wrong reference file
 			cmds.iconTextButton(errorButton,e=True,c='assetWrangle.fixRef(\"%s\",\"%s\")'%(asset["transform"],errorButton)) #add fix command to error button

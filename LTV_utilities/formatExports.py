@@ -78,15 +78,15 @@ def exportAnimation(obj,animOnly):
 	newName = '%s_%s'%(filename.rsplit('.',1)[0],objName)
 	print 'new name = %s'%newName
 	#move object to the root and redefine as itself if it's not already
-	try:
-		obj = cmds.parent(obj,w=True)[0]
-	except:
-		pass
+	#try:
+	#	obj = cmds.parent(obj,w=True)[0]
+	#except:
+	#	pass
 
 	#select object to export
 	try:
 		exportObject = '%s|*CC_Base_BoneRoot'%(obj)
-		exportObject = cmds.parent(exportObject, world=True)
+		#exportObject = cmds.parent(exportObject, world=True)
 		cmds.select(exportObject,r=True)
 	except:
 		exportObject = obj

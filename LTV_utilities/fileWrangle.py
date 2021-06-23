@@ -30,6 +30,19 @@ def listFolders(path):
 		fileNames = list(set(fileNames))
 	return fileNames
 
+def listAbsFolders(pathName):
+	fileNames = []
+	#read folder
+	if(os.path.isdir(pathName)):
+		files = os.listdir(pathName)
+		for f in files:
+			#filter out filetypes
+			if os.path.isdir('%s/%s'%(pathName,f)) and f[0] != '.':
+				fileNames.append(f)
+		#remove duplicates
+		fileNames = list(set(fileNames))
+	return fileNames
+
 
 #list files of a type in a folder
 def listFiles(path,filetype):

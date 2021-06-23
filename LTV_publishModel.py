@@ -74,6 +74,11 @@ def getParentFolder():
 def makeFbx(refName,obj):
 	#unparent rig and geo
 	geo = '|%s|Geometry'%obj
+	worldGeo = []
+	childGeo = cmds.listRelatives(geo,c=True)
+	for c in childGeo:
+		g = cmds.parent( c, world=True ) #parent to world
+		worldGeo += g
 	bodyRig = '|%s|CC_Base_BoneRoot'%obj #find skeleton
 	cmds.parent( bodyRig, world=True ) #parent to world
 	bodyRig = 'CC_Base_BoneRoot' #re-define skeleton object
@@ -91,10 +96,11 @@ def makeFbx(refName,obj):
 		os.makedirs(pathName.rsplit('/',1)[0])
 
 	#make new selection
-	cmds.select(geo,bodyRig,r=True)
+	cmds.select(worldGeo,bodyRig,r=True)
 
 	#export .fbx
 	#cmds.file(pathName,force=True,type='Fbx',pr=True,es=True,f=True)
+	cmds.FBXExportFileVersion("-v","FBX201100") 
 	cmds.FBXExportBakeComplexAnimation("-v",False)
 	cmds.FBXExportAnimationOnly("-v",False)
 	cmds.FBXExportUseSceneName ("-v",False)
@@ -104,6 +110,8 @@ def makeFbx(refName,obj):
 	cmds.select(obj,r=True)
 
 	cmds.parent( bodyRig, obj ) #parent back in hierarchy
+	for g in worldGeo:
+		cmds.parent( g, geo ) #parent to world
 
 #export .ma
 def makeRef(refName,publishString):
