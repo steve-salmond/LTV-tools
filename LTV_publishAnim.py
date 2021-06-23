@@ -29,7 +29,6 @@ def prepFile(assetObject):
 	blendShapes = cmds.ls(type='blendShape') #find all blendshapes
 	cmds.bakeResults(blendShapes,simulation=True,t=(startFrame,endFrame),hierarchy='below',sampleBy=1,oversamplingRate=1,disableImplicitControl=True,preserveOutsideKeys=True,sparseAnimCurveBake=False,removeBakedAttributeFromLayer=False,removeBakedAnimFromLayer=False,bakeOnOverrideLayer=False,minimizeRotation=True,controlPoints=False,shape=True)
 
-
 	### --- ASSETS --- ###
 
 	#add objects to selection if they are checked
@@ -47,7 +46,6 @@ def prepFile(assetObject):
 				#deformationSystems.append('%s|*:CC_Base_BoneRoot'%assetObject[i]) #find rig of the asset and add it
 				outfitName = cmds.optionMenu(dropdown,q=True,v=True) #get outfit from menu
 				outfits.append(outfitName) #add outfit if it's checked
-				print outfitName
 		if sel: 
 			#export animation one object at a time
 			for i,obj in enumerate(sel):
@@ -55,43 +53,35 @@ def prepFile(assetObject):
 					refPath = cmds.referenceQuery( obj,filename=True ) #get reference filename
 					refNode = cmds.referenceQuery( obj,rfn=True ) #get name of reference node
 					cmds.file(refPath,ir=True,referenceNode=refNode) #import reference to scene
-
-				ns = obj.split(":")
-				if len(ns) > 1:
-					ns = obj.split(":")[0].split("|")[-1]
-					grp = cmds.group(em=True,n="%s_grp"%ns)
-					cmds.namespace(moveNamespace=(ns,":"),force=True)
-
-					resolvedObjName = cmds.listRelatives(grp,c=True,f=True)[0]
-					skeleton = "%s|CC_Base_BoneRoot"%resolvedObjName
-					s = cmds.parent(skeleton,grp)
-
-					childGeo = cmds.listRelatives('%s|Geometry'%resolvedObjName,c=True,f=True)
-					for c in childGeo:
-						cmds.parent(c,grp) #parent to new group
+				nsLen = obj.split(":") #check if there is a namespace
+				if len(nsLen) > 1:
+					ns = obj.split(":")[0].split("|")[-1] #get namespace name
+					grp = cmds.group(em=True,n="%s_grp"%ns) #make a group using the namespace
+					cmds.parent(obj,grp) #parent the top asset node to the group
+					cmds.namespace(moveNamespace=(ns,":"),force=True) #delete the namespace
+					resolvedObjName = cmds.listRelatives(grp,c=True,f=True)[0] #find the asset node again
 				else:
-					grp=obj
+					grp = cmds.listRelatives(obj,p=True)[0]
+					resolvedObjName = obj
 
-				#remove namespace on skeleton
-				#cmds.select('%s|*:CC_Base_BoneRoot'%obj,r=True) #select skeleton
-				#cmds.select('%s|*:Geometry'%obj,add=True) #add geo
-				#nodes = cmds.ls(sl=True,dag=True) #list child nodes
-				#for n in nodes:
-					#cmds.rename(n,n.split(":")[-1],ignoreShape=True) #rename child nodes
-				#do the export
-				obj,newName,remainingPath = exp.exportAnimation(grp,False)
+				skeleton = "%s|CC_Base_BoneRoot"%resolvedObjName #find the skeleton
+				s = cmds.parent(skeleton,grp) #move the skeleton out of the asset node group
+				childGeo = cmds.listRelatives('%s|Geometry'%resolvedObjName,c=True,f=True) #find the asset geometry 
+				movedGeo = [] #hold the names of the geo after it's been moved
+				for c in childGeo:
+					geo = cmds.parent(c,grp) #move the geo out of the asset node group
+					movedGeo.append(geo) #add new geo path to list
+
+				obj,newName,remainingPath = exp.exportAnimation(grp,False) #do the export
 				#make character dictionary
 				publishName = "unknown"
 				try:
-					#get REF filename
-					publishName = cmds.getAttr('%s.publishName'%resolvedObjName)
-					#get asset type from parent folder
-					#assetType = os.path.split(os.path.dirname(refPath))[1]
-					#publishName = "%s/%s"%(assetType,publishName)
+					publishName = cmds.getAttr('%s.publishName'%resolvedObjName) #get REF filename
 				except:
-					#make a name if publishName attribute doesn't exist
-					#publishName = "%s/%s"%(remainingPath,newName.split('/')[-1])
 					pass
+				cmds.parent(s,resolvedObjName) #parent skeleton back into asset group
+				for g in movedGeo: 
+					cmds.parent(g,"%s|Geometry"%resolvedObjName) #parent geo back into asset group
 
 				#format json
 				displayName = publishName.split("_")[0]
@@ -101,7 +91,6 @@ def prepFile(assetObject):
 				#charDict = {"name":  displayName,"model": publishName,"anim": "%s/%s"%(remainingPath,newName.split('/')[-1]),"outfit": outfitName} 
 				sceneDict["characters"].append(charDict) #add to scene dictionary
 
-
 	### --- CAMERA --- ###
 
 	cameraName = cmds.optionMenu('cameraSelection',q=True,v=True) #get camera from menu
@@ -110,6 +99,9 @@ def prepFile(assetObject):
 			newCamera = cam.parentNewCamera(cameraName)[0] #parent a new camera to work around grouping and scaling
 			cmds.bakeResults(newCamera,simulation=True,t=(startFrame,endFrame),hierarchy='below',sampleBy=1,oversamplingRate=1,disableImplicitControl=True,preserveOutsideKeys=True,sparseAnimCurveBake=False,removeBakedAttributeFromLayer=False,removeBakedAnimFromLayer=False,bakeOnOverrideLayer=False,minimizeRotation=True,controlPoints=False,shape=True) #bake camera keys
 			obj,newName,remainingPath = exp.exportAnimation(newCamera,False) #export the camera animation
+			if newCamera and isinstance(newCamera, list): #sometimes the camera returns a list
+				newCamera = newCamera[0] #re-define the first object as string
+			cmds.delete(newCamera) #delete the temp camera 
 			camDict = {"name":  "CAM","model": "%s/%s"%(remainingPath,newName.split('/')[-1]),"anim":"%s/%s"%(remainingPath,newName.split('/')[-1])} #make a camera dictionary
 			sceneDict["cameras"].append(camDict) #add to scene dictionary
 
@@ -141,8 +133,8 @@ def prepFile(assetObject):
 	with open(pathName, mode='w') as feedsjson: #open the file for writing
 		json.dump(sceneDict, feedsjson, indent=4, sort_keys=True) #write dictionary out to file
 	try:
-		#cmds.file(filename,open=True,force=True,iv=True) #revert to pre baked file
-		print("Debug")
+		cmds.file(filename,open=True,force=True,iv=True) #revert to pre baked file
+		#print("Debug")
 	except:
 		pass
 
@@ -191,16 +183,15 @@ def IoM_exportAnim_window():
 		cmds.rowLayout(numberOfColumns=2) #new row layout
 		publishedAsset.append(asset["transform"]) #add transform to asset dictionary
 		charName = cmds.getAttr("%s.publishName"%asset["transform"]).replace("_REF","") #get characters name 
-		f = "%s/Assets/Characters/Json/%s.json"%(unity.getUnityProject(),charName)
-		outfitNames = []
+		f = "%s/Assets/Characters/Json/%s.json"%(unity.getUnityProject(),charName) #path to character definition
+		outfitNames = [] #hold outfit names
 		try:
-			charDict = loadSave.loadJSON(f)
-			outfits = charDict["outfits"]
-			outfitNames = [li["name"] for li in outfits]
+			charDict = loadSave.loadJSON(f) #load character json
+			outfits = charDict["outfits"] #find outfits
+			outfitNames = [li["name"] for li in outfits] #extract outfit names
 		except:
 			pass
-		
-		cmds.checkBox(label=asset["publishedName"], annotation=asset["transform"],v=asset["correctFile"],onCommand='ui.selRef(\"%s\")'%asset["transform"]) #add checkbox
+		cmds.checkBox(label=asset["publishedName"].replace("_REF",""), annotation=asset["transform"],v=asset["correctFile"],onCommand='ui.selRef(\"%s\")'%asset["transform"]) #add checkbox
 		outfitSelection = cmds.optionMenu() #make outfit menu
 		for outfit in outfitNames:
 			cmds.menuItem(l=outfit) #add outfit to menu
