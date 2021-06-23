@@ -64,6 +64,20 @@ def listFiles(path,filetype):
 		fileNames = list(set(fileNames))
 	return fileNames
 
+def listAbsFiles(pathName,filetype):
+	fileNames = [] #make list for legitmate files
+	#read folder
+	if(os.path.isdir(pathName)):
+		files = os.listdir(pathName)
+		for f in files:
+			#filter out filetypes
+			if f.split('.')[-1] == filetype:
+				#remove extention
+				fileNames.append(f.split('.')[0])
+		#remove duplicates
+		fileNames = list(set(fileNames))
+	return fileNames
+
 
 def userPrefsPath():
 	if platform.system() == "Windows":

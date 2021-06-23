@@ -256,7 +256,7 @@ def IoM_exportAnim_window():
 	#---------------------------------------------------------------------------------------------------------------------------------------------#
 	#Environment
 	#variables
-	sets = fileWrangle.listFiles('%s/Assets/Resources/Sets'%unity.getUnityProject(),'prefab') #list all the environments in the Unity project
+	sets = fileWrangle.listAbsFiles('%s/Assets/Sets/Fbx'%unity.getUnityProject(),'fbx') #list all the environments in the Unity project
 	sets = sorted(sets) #sort alphabetaclly #sort the environments
 	#UI
 	sep3 = cmds.separator("sep3",height=4, style='in' )
