@@ -34,32 +34,35 @@ def prepFile(assetObject):
 
 	#add objects to selection if they are checked
 	sel = [] #list for checked assets
-	deformationSystems = [] #list for asset rigs
+	outfits = []
+	#deformationSystems = [] #list for asset rigs
 	sceneDict = {"cameras": [],"characters": [],"extras": [],"sets": []} #dictionary for publish
 	rows = cmds.columnLayout('boxLayout',ca=True,q=True) #list asset ui rows
 	if rows:
 		for i,r in enumerate(rows):
 			checkBox = cmds.rowLayout(r,ca=True,q=True)[0] 
+			dropdown = cmds.rowLayout(r,ca=True,q=True)[1] 
 			if cmds.checkBox(checkBox,v=True, q=True):
 				sel.append(assetObject[i]) #add asset if it's checked
-				deformationSystems.append('%s|*:CC_Base_BoneRoot'%assetObject[i]) #find rig of the asset and add it
+				#deformationSystems.append('%s|*:CC_Base_BoneRoot'%assetObject[i]) #find rig of the asset and add it
+				outfitName = cmds.optionMenu(dropdown,q=True,v=True) #get outfit from menu
+				outfits.append(outfitName) #add outfit if it's checked
 		if sel: 
 			#export animation one object at a time
-			for obj in sel:
+			for i,obj in enumerate(sel):
 				refPath = cmds.referenceQuery( obj,filename=True ) #get reference filename
 				refNode = cmds.referenceQuery( obj,rfn=True ) #get name of reference node
 				cmds.file(refPath,ir=True,referenceNode=refNode) #import reference to scene
 
 				ns = obj.split(":")[0].split("|")[-1]
-				objName = obj.split("|")[-1]
-				print("objName = %s"%objName)
+				objName = obj.split("|")[-1].split(":")[-1]
 
-				grp = cmds.group(em=True,n=ns)
+				grp = cmds.group(em=True,n="%s_grp"%ns)
 				p = cmds.parent(obj,grp)
 
 				cmds.namespace(moveNamespace=(ns,":"),force=True)
-				resolvedObjName = '%s|%s'%(grp,objName)
-				print resolvedObjName
+				#resolvedObjName = '%s|%s'%(grp,objName)
+				resolvedObjName = cmds.listRelatives(grp,c=True,f=True)[0]
 				skeleton = "%s|CC_Base_BoneRoot"%resolvedObjName
 				s = cmds.parent(skeleton,grp)
 
@@ -67,8 +70,7 @@ def prepFile(assetObject):
 				for c in childGeo:
 					cmds.parent(c,grp) #parent to new group
 
-				outfitName = cmds.optionMenu('outfitSelection',q=True,v=True) #get camera from menu
-				print outfitName
+				
 
 				#remove namespace on skeleton
 				#cmds.select('%s|*:CC_Base_BoneRoot'%obj,r=True) #select skeleton
@@ -77,21 +79,27 @@ def prepFile(assetObject):
 				#for n in nodes:
 					#cmds.rename(n,n.split(":")[-1],ignoreShape=True) #rename child nodes
 				#do the export
-				print("obj = %s"%deformationSystems)
+				print("obj = %s"%resolvedObjName)
 				obj,newName,remainingPath = exp.exportAnimation(grp,False)
 				#make character dictionary
+				publishName = "unknown"
 				try:
 					#get REF filename
-					publishName = cmds.getAttr('%s.publishName'%obj)
+					publishName = cmds.getAttr('%s.publishName'%resolvedObjName)
 					#get asset type from parent folder
-					assetType = os.path.split(os.path.dirname(refPath))[1]
-					publishName = "%s/%s"%(assetType,publishName)
+					#assetType = os.path.split(os.path.dirname(refPath))[1]
+					#publishName = "%s/%s"%(assetType,publishName)
 				except:
 					#make a name if publishName attribute doesn't exist
-					publishName = "%s/%s"%(remainingPath,newName.split('/')[-1])
+					#publishName = "%s/%s"%(remainingPath,newName.split('/')[-1])
+					pass
+
 				#format json
-				displayName = re.split('\d+', newName)[-1][1:]
-				charDict = {"name":  displayName,"model": publishName,"anim": "%s/%s"%(remainingPath,newName.split('/')[-1]),"outfit": "foobar"}
+				displayName = publishName.split("_")[0]
+				#displayName = re.split('\d+', newName)[-1][1:]
+				
+				charDict = {"name":  displayName,"anim": "%s/%s"%(remainingPath,newName.split('/')[-1]),"outfit": outfits[i]} 
+				#charDict = {"name":  displayName,"model": publishName,"anim": "%s/%s"%(remainingPath,newName.split('/')[-1]),"outfit": outfitName} 
 				sceneDict["characters"].append(charDict) #add to scene dictionary
 
 
@@ -194,7 +202,7 @@ def IoM_exportAnim_window():
 			pass
 		
 		cmds.checkBox(label=asset["publishedName"], annotation=asset["transform"],v=asset["correctFile"],onCommand='ui.selRef(\"%s\")'%asset["transform"]) #add checkbox
-		outfitSelection = cmds.optionMenu('outfitSelection') #make outfit menu
+		outfitSelection = cmds.optionMenu() #make outfit menu
 		for outfit in outfitNames:
 			cmds.menuItem(l=outfit) #add outfit to menu
 		if asset["correctFile"] == 0:
