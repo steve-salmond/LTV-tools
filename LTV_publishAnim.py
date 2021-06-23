@@ -47,30 +47,30 @@ def prepFile(assetObject):
 				#deformationSystems.append('%s|*:CC_Base_BoneRoot'%assetObject[i]) #find rig of the asset and add it
 				outfitName = cmds.optionMenu(dropdown,q=True,v=True) #get outfit from menu
 				outfits.append(outfitName) #add outfit if it's checked
+				print outfitName
 		if sel: 
 			#export animation one object at a time
 			for i,obj in enumerate(sel):
-				refPath = cmds.referenceQuery( obj,filename=True ) #get reference filename
-				refNode = cmds.referenceQuery( obj,rfn=True ) #get name of reference node
-				cmds.file(refPath,ir=True,referenceNode=refNode) #import reference to scene
+				if cmds.referenceQuery( obj,inr=True ): #check if file is referenced
+					refPath = cmds.referenceQuery( obj,filename=True ) #get reference filename
+					refNode = cmds.referenceQuery( obj,rfn=True ) #get name of reference node
+					cmds.file(refPath,ir=True,referenceNode=refNode) #import reference to scene
 
-				ns = obj.split(":")[0].split("|")[-1]
-				objName = obj.split("|")[-1].split(":")[-1]
+				ns = obj.split(":")
+				if len(ns) > 1:
+					ns = obj.split(":")[0].split("|")[-1]
+					grp = cmds.group(em=True,n="%s_grp"%ns)
+					cmds.namespace(moveNamespace=(ns,":"),force=True)
 
-				grp = cmds.group(em=True,n="%s_grp"%ns)
-				p = cmds.parent(obj,grp)
+					resolvedObjName = cmds.listRelatives(grp,c=True,f=True)[0]
+					skeleton = "%s|CC_Base_BoneRoot"%resolvedObjName
+					s = cmds.parent(skeleton,grp)
 
-				cmds.namespace(moveNamespace=(ns,":"),force=True)
-				#resolvedObjName = '%s|%s'%(grp,objName)
-				resolvedObjName = cmds.listRelatives(grp,c=True,f=True)[0]
-				skeleton = "%s|CC_Base_BoneRoot"%resolvedObjName
-				s = cmds.parent(skeleton,grp)
-
-				childGeo = cmds.listRelatives('%s|Geometry'%resolvedObjName,c=True,f=True)
-				for c in childGeo:
-					cmds.parent(c,grp) #parent to new group
-
-				
+					childGeo = cmds.listRelatives('%s|Geometry'%resolvedObjName,c=True,f=True)
+					for c in childGeo:
+						cmds.parent(c,grp) #parent to new group
+				else:
+					grp=obj
 
 				#remove namespace on skeleton
 				#cmds.select('%s|*:CC_Base_BoneRoot'%obj,r=True) #select skeleton
@@ -79,7 +79,6 @@ def prepFile(assetObject):
 				#for n in nodes:
 					#cmds.rename(n,n.split(":")[-1],ignoreShape=True) #rename child nodes
 				#do the export
-				print("obj = %s"%resolvedObjName)
 				obj,newName,remainingPath = exp.exportAnimation(grp,False)
 				#make character dictionary
 				publishName = "unknown"
@@ -191,7 +190,7 @@ def IoM_exportAnim_window():
 	for asset in publishedAssets: #for each asset
 		cmds.rowLayout(numberOfColumns=2) #new row layout
 		publishedAsset.append(asset["transform"]) #add transform to asset dictionary
-		charName = asset["transform"].split(':')[-1] #get characters name 
+		charName = cmds.getAttr("%s.publishName"%asset["transform"]).replace("_REF","") #get characters name 
 		f = "%s/Assets/Characters/Json/%s.json"%(unity.getUnityProject(),charName)
 		outfitNames = []
 		try:

@@ -37,12 +37,14 @@ def findPublishedAssets():
 	for t in allTransforms:
 		if cmds.attributeQuery( 'publishName', node=t, exists=True):
 			publishedName = cmds.getAttr("%s.publishName"%t)
-			fullRefPath = cmds.referenceQuery( t, filename=True )
-			parentFolder = fullRefPath.split('/')[-2]
-			correctFile = 0
-			if parentFolder in assetFolders:
-				correctFile = 1
-			t=t[1:]
+			correctFile = 1
+			if cmds.referenceQuery( t, isNodeReferenced=True ):
+				fullRefPath = cmds.referenceQuery( t, filename=True )
+				parentFolder = fullRefPath.split('/')[-2]
+				correctFile = 0
+				if parentFolder in assetFolders:
+					correctFile = 1
+				t=t[1:]
 			publishedAssets.append({"transform":t,"publishedName":publishedName,"correctFile":correctFile})
 		
 	return publishedAssets
