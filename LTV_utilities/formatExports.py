@@ -63,6 +63,7 @@ def exportAsAlembic(abcFilename):
 		cmds.select(sel,r=True)
 		print abcExportPath
 		#cmds.file(abcExportPath.replace('.abc','_mat.fbx'),force=True,type='FBX export',es=True)
+		cmds.FBXExport('-file', abcExportPath.replace('.abc','_mat.fbx'),'-s')
 
 		returnString = "%s/%s_cache"%(remainingPath,abcFilename)
 	
@@ -80,11 +81,13 @@ def exportAnimation(obj,animOnly):
 	objParent = cmds.listRelatives(obj,p=True)
 	#select object to export
 	try:
-		exportObject = '%s|*CC_Base_BoneRoot'%(objParent)
+		exportObject = '%s|*CC_Base_BoneRoot'%(objParent[0])
+		print("correct exportObject = %s"%exportObject)
 		#exportObject = cmds.parent(exportObject, world=True)
 		cmds.select(exportObject,r=True)
 	except:
 		exportObject = obj
+		print("fallback exportObject = %s"%exportObject)
 		cmds.select(exportObject,r=True)
 	#define full file name
 	if ':' in exportObject:

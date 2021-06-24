@@ -17,8 +17,10 @@ import LTV_utilities.persistenceNode as persist
 import LTV_utilities.unityConfig as unity
 import LTV_utilities.assetWrangle as assetWrangle
 import LTV_utilities.uiAction as ui
+from datetime import datetime
 		
 def prepFile(assetObject):
+	start=datetime.now()
 	persist.createFilePrefs() #make a node to save ui settings in the scene
 	filename = cmds.file(save=True) #save the scene file
 	parentFolder,remainingPath = fileWrangle.getParentFolder() #get the path to parent folder
@@ -81,9 +83,9 @@ def prepFile(assetObject):
 					publishName = cmds.getAttr('%s.publishName'%resolvedObjName) #get REF filename
 				except:
 					pass
-				cmds.parent(s,resolvedObjName) #parent skeleton back into asset group
-				for g in movedGeo: 
-					cmds.parent(g,"%s|Geometry"%resolvedObjName) #parent geo back into asset group
+				#cmds.parent(s,resolvedObjName) #parent skeleton back into asset group
+				#for g in movedGeo: 
+				#	cmds.parent(g,"%s|Geometry"%resolvedObjName) #parent geo back into asset group
 
 				#format json
 				displayName = publishName.split("_")[0]
@@ -147,6 +149,8 @@ def prepFile(assetObject):
 		unityEditorPath = cmds.textFieldButtonGrp('unityPath',q=True,tx=True) #path to unity install
 		exp.copyUnityScene(unityVersion,unityEditorPath) #build the unity scene
 
+	print ("Time taken = %s"%(datetime.now()-start)) 
+
 ###		UI		###
 
 def IoM_exportAnim_window():
@@ -197,9 +201,9 @@ def IoM_exportAnim_window():
 		outfitSelection = cmds.optionMenu() #make outfit menu
 		for outfit in outfitNames:
 			cmds.menuItem(l=outfit) #add outfit to menu
-		if asset["correctFile"] == 0:
-			errorButton = cmds.iconTextButton( style='iconOnly', image1='IoMError.svg', label='spotlight',h=20,w=20,annotation='Incorrect file used' ) #make error button if using the wrong reference file
-			cmds.iconTextButton(errorButton,e=True,c='assetWrangle.fixRef(\"%s\",\"%s\")'%(asset["transform"],errorButton)) #add fix command to error button
+		#if asset["correctFile"] == 0:
+			#errorButton = cmds.iconTextButton( style='iconOnly', image1='IoMError.svg', label='spotlight',h=20,w=20,annotation='Incorrect file used' ) #make error button if using the wrong reference file
+			#cmds.iconTextButton(errorButton,e=True,c='assetWrangle.fixRef(\"%s\",\"%s\")'%(asset["transform"],errorButton)) #add fix command to error button
 		cmds.setParent( '..' )
 	cmds.setParent( '..' )
 	#UI layout
