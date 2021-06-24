@@ -83,9 +83,9 @@ def prepFile(assetObject):
 					publishName = cmds.getAttr('%s.publishName'%resolvedObjName) #get REF filename
 				except:
 					pass
-				#cmds.parent(s,resolvedObjName) #parent skeleton back into asset group
-				#for g in movedGeo: 
-				#	cmds.parent(g,"%s|Geometry"%resolvedObjName) #parent geo back into asset group
+				cmds.parent(s,resolvedObjName) #parent skeleton back into asset group
+				for g in movedGeo: 
+					cmds.parent(g,"%s|Geometry"%resolvedObjName) #parent geo back into asset group
 
 				#format json
 				displayName = publishName.split("_")[0]
@@ -137,8 +137,8 @@ def prepFile(assetObject):
 	with open(pathName, mode='w') as feedsjson: #open the file for writing
 		json.dump(sceneDict, feedsjson, indent=4, sort_keys=True) #write dictionary out to file
 	try:
-		#cmds.file(filename,open=True,force=True,iv=True) #revert to pre baked file
-		print("Debug")
+		cmds.file(filename,open=True,force=True,iv=True) #revert to pre baked file
+		#print("Debug")
 	except:
 		pass
 
@@ -149,7 +149,8 @@ def prepFile(assetObject):
 		unityEditorPath = cmds.textFieldButtonGrp('unityPath',q=True,tx=True) #path to unity install
 		exp.copyUnityScene(unityVersion,unityEditorPath) #build the unity scene
 
-	print ("Time taken = %s"%(datetime.now()-start)) 
+	dt = datetime.now()-start
+	print ("Time taken = %s"%(dt)) 
 
 ###		UI		###
 
@@ -178,6 +179,7 @@ def IoM_exportAnim_window():
 	#---------------------------------------------------------------------------------------------------------------------------------------------#
 	#Asset export
 	#variables
+	preferedAssetOutfits = persist.readFilePrefs('Assets') #get set from previous save
 	publishedAssets = assetWrangle.findPublishedAssets() #find all published objects by searching for the 'publishName' attribute
 	publishedAsset = [] #published asset null
 	unityPath = unity.getUnityProject()
@@ -186,7 +188,7 @@ def IoM_exportAnim_window():
 	assetsLabel = cmds.text('assetsLabel',label='Assets',w=40,al='left') #assets label
 	boxLayout = cmds.columnLayout('boxLayout',columnAttach=('both', 5), rowSpacing=10, columnWidth=350 ) #new box layout
 	for asset in publishedAssets: #for each asset
-		cmds.rowLayout(numberOfColumns=2) #new row layout
+		cmds.rowLayout(numberOfColumns=3) #new row layout
 		publishedAsset.append(asset["transform"]) #add transform to asset dictionary
 		charName = cmds.getAttr("%s.publishName"%asset["transform"]).replace("_REF","") #get characters name 
 		f = "%s/Assets/Characters/Json/%s.json"%(unity.getUnityProject(),charName) #path to character definition
@@ -197,13 +199,19 @@ def IoM_exportAnim_window():
 			outfitNames = [li["name"] for li in outfits] #extract outfit names
 		except:
 			pass
-		cmds.checkBox(label=asset["publishedName"].replace("_REF",""), annotation=asset["transform"],v=asset["correctFile"],onCommand='ui.selRef(\"%s\")'%asset["transform"]) #add checkbox
+		labelName = asset["publishedName"].replace("_REF","")
+		cmds.checkBox(label=labelName, annotation=asset["transform"],v=asset["correctFile"],onCommand='ui.selRef(\"%s\")'%asset["transform"]) #add checkbox
 		outfitSelection = cmds.optionMenu() #make outfit menu
 		for outfit in outfitNames:
 			cmds.menuItem(l=outfit) #add outfit to menu
-		#if asset["correctFile"] == 0:
-			#errorButton = cmds.iconTextButton( style='iconOnly', image1='IoMError.svg', label='spotlight',h=20,w=20,annotation='Incorrect file used' ) #make error button if using the wrong reference file
-			#cmds.iconTextButton(errorButton,e=True,c='assetWrangle.fixRef(\"%s\",\"%s\")'%(asset["transform"],errorButton)) #add fix command to error button
+		try:
+			cmds.optionMenu(outfitSelection,v=json.loads(preferedAssetOutfits)[labelName],e=True)
+		except:
+			pass
+
+		if asset["correctFile"] == 0:
+			errorButton = cmds.iconTextButton( style='iconOnly', image1='IoMError.svg', label='spotlight',h=20,w=20,annotation='Incorrect file used' ) #make error button if using the wrong reference file
+			cmds.iconTextButton(errorButton,e=True,c='assetWrangle.fixRef(\"%s\",\"%s\")'%(asset["transform"],errorButton)) #add fix command to error button
 		cmds.setParent( '..' )
 	cmds.setParent( '..' )
 	#UI layout

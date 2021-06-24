@@ -42,6 +42,8 @@ def findPublishedAssets():
 				fullRefPath = cmds.referenceQuery( t, filename=True )
 				parentFolder = fullRefPath.split('/')[-2]
 				correctFile = 0
+				print("fullRefPath = %s"%fullRefPath)
+				print("parentFolder = %s"%parentFolder)
 				if parentFolder in assetFolders:
 					correctFile = 1
 				t=t[1:]
