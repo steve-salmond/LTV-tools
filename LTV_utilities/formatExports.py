@@ -76,16 +76,11 @@ def exportAnimation(obj,animOnly):
 	objName = obj.split('|')[-1]
 	objName = objName.replace(':','_')
 	newName = '%s_%s'%(filename.rsplit('.',1)[0],objName)
-	print 'new name = %s'%newName
-	#move object to the root and redefine as itself if it's not already
-	#try:
-	#	obj = cmds.parent(obj,w=True)[0]
-	#except:
-	#	pass
 
+	objParent = cmds.listRelatives(obj,p=True)
 	#select object to export
 	try:
-		exportObject = '%s|*CC_Base_BoneRoot'%(obj)
+		exportObject = '%s|*CC_Base_BoneRoot'%(objParent)
 		#exportObject = cmds.parent(exportObject, world=True)
 		cmds.select(exportObject,r=True)
 	except:
@@ -129,6 +124,7 @@ def copyUnityScene(unityVersion,unityEditorPath):
 	#paths
 	unityTemplateFile = '%s/Assets/Scenes/Templates/shotTemplate.unity'%(unity.getUnityProject())
 	unitySceneFile = '%s/Assets/Scenes/%s/%s.unity'%(unity.getUnityProject(),remainingPath,filename.split('.')[0])
+	print "unitySceneFile = %s"%unitySceneFile
 	#make folder
 	folder = unitySceneFile.rsplit('/',1)[0]
 	if not os.path.exists(folder):
@@ -139,15 +135,16 @@ def copyUnityScene(unityVersion,unityEditorPath):
 		projectPath = unity.getUnityProject()
 		scenePath = "Assets/Scenes/%s/%s.unity"%(remainingPath,filename.split('.')[0])
 		shotName = "%s"%filename.split('.')[0]
-		
+
 		if platform.system() == "Windows":
-			subprocess.Popen('\"%s/%s/Editor/Unity.exe\" -quit -batchmode -projectPath \"%s\" -executeMethod BuildSceneBatch.PerformBuild -shotName \"%s\" -scenePath \"%s\" '%(unityEditorPath,unityVersion,projectPath,shotName,scenePath),shell=True)
+			subprocess.Popen('\"%s/%s/Editor/Unity.exe\" -quit -projectPath \"%s\" -executeMethod BuildSceneBatch.PerformBuild -shotName \"%s\" -scenePath \"%s\" '%(unityEditorPath,unityVersion,projectPath,shotName,scenePath),shell=True)
 		else:
 			subprocess.Popen('%s/%s/Unity.app/Contents/MacOS/Unity -quit -batchmode -projectPath %s -executeMethod BuildSceneBatch.PerformBuild -shotName \"%s\" -scenePath \"%s\" '%(unityEditorPath,unityVersion,projectPath,shotName,scenePath),shell=True)
 	except:
 		print "Unable to populate Unity scene file"
 		#copy blank Unity scene if auto population fails
 		try:
-			copyfile(unityTemplateFile, unitySceneFile)
+			if not os.path.exists(unitySceneFile):
+				copyfile(unityTemplateFile, unitySceneFile)
 		except:
 			print "no Unity scene file created"

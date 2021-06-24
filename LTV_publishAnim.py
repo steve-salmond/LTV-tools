@@ -60,6 +60,8 @@ def prepFile(assetObject):
 					cmds.parent(obj,grp) #parent the top asset node to the group
 					cmds.namespace(moveNamespace=(ns,":"),force=True) #delete the namespace
 					resolvedObjName = cmds.listRelatives(grp,c=True,f=True)[0] #find the asset node again
+					cmds.rename(resolvedObjName,ns)
+					resolvedObjName = cmds.listRelatives(grp,c=True,f=True)[0] #find the asset node again
 				else:
 					grp = cmds.listRelatives(obj,p=True)[0]
 					resolvedObjName = obj
@@ -72,7 +74,7 @@ def prepFile(assetObject):
 					geo = cmds.parent(c,grp) #move the geo out of the asset node group
 					movedGeo.append(geo) #add new geo path to list
 
-				obj,newName,remainingPath = exp.exportAnimation(grp,False) #do the export
+				obj,newName,remainingPath = exp.exportAnimation(resolvedObjName,False) #do the export
 				#make character dictionary
 				publishName = "unknown"
 				try:
@@ -133,8 +135,8 @@ def prepFile(assetObject):
 	with open(pathName, mode='w') as feedsjson: #open the file for writing
 		json.dump(sceneDict, feedsjson, indent=4, sort_keys=True) #write dictionary out to file
 	try:
-		cmds.file(filename,open=True,force=True,iv=True) #revert to pre baked file
-		#print("Debug")
+		#cmds.file(filename,open=True,force=True,iv=True) #revert to pre baked file
+		print("Debug")
 	except:
 		pass
 
