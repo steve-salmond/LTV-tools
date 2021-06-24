@@ -106,7 +106,7 @@ def findAssets():
 	#create dictionary for assets
 	assetDict = {}
 	#list asset types
-	assetFolders = listFolders('maya/scenes/Models')
+	assetFolders = listFolders('maya/scenes/models')
 	#list assets within the types
 	for assetType in assetFolders:
 		typeDict = {assetType:[]}
@@ -114,9 +114,14 @@ def findAssets():
 		assets = listFiles(assetPath,'ma')
 		dict = []
 		for a in assets:
-			aDict = {"name":  a,"path": 'scenes/Models/%s/%s.ma'%(assetType,a)}
+			aDict = {"name":  a,"path": 'scenes/models/%s/%s.ma'%(assetType,a)}
 			dict.append(aDict)
 		assetDict[assetType] = dict
+		assets = listFiles(assetPath,'mb')
+		for a in assets:
+			aDict = {"name":  a,"path": 'scenes/models/%s/%s.mb'%(assetType,a)}
+			dict.append(aDict)
+
 	return assetDict
 
 ###		UI		###

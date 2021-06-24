@@ -179,7 +179,7 @@ def IoM_exportAnim_window():
 	#---------------------------------------------------------------------------------------------------------------------------------------------#
 	#Asset export
 	#variables
-	preferedAssetOutfits = persist.readFilePrefs('Assets') #get set from previous save
+	preferedAssetOutfits = persist.readFilePrefs('Assets') #get outfits from previous save
 	publishedAssets = assetWrangle.findPublishedAssets() #find all published objects by searching for the 'publishName' attribute
 	publishedAsset = [] #published asset null
 	unityPath = unity.getUnityProject()
@@ -205,7 +205,7 @@ def IoM_exportAnim_window():
 		for outfit in outfitNames:
 			cmds.menuItem(l=outfit) #add outfit to menu
 		try:
-			cmds.optionMenu(outfitSelection,v=json.loads(preferedAssetOutfits)[labelName],e=True)
+			cmds.optionMenu(outfitSelection,v=json.loads(preferedAssetOutfits)[labelName],e=True) #set prefered outfit from persistence node
 		except:
 			pass
 
