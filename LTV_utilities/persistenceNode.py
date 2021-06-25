@@ -59,9 +59,11 @@ def createFilePrefs():
 			checkBox = cmds.rowLayout(r,ca=True,q=True)[0] 
 			dropdown = cmds.rowLayout(r,ca=True,q=True)[1] 
 			if cmds.checkBox(checkBox,v=True, q=True):
+				transform = cmds.checkBox(checkBox,annotation=True, q=True)
 				name = cmds.checkBox(checkBox,l=True, q=True)
 				outfitName = cmds.optionMenu(dropdown,q=True,v=True) #get outfit from menu
 				outfitDict[name] = outfitName
+				outfitDict[transform] = outfitName
 	addAttrPlus(iomPrefNode,'Assets',json.dumps(outfitDict))
 	prefDict["Assets"] = json.dumps(outfitDict)
 	with open(pathName, mode='w') as feedsjson: #open the file for writing
