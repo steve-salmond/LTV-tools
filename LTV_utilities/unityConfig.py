@@ -38,9 +38,11 @@ def getUnityPath():
 
 	prefPath = fileWrangle.userPrefsPath()
 	prefFile = '%s/LTV_prefs.json'%(prefPath)
+	print("prefFile = %s"%prefFile)
 	try:
 		with open(prefFile) as json_data:
 			data = json.load(json_data)
+			print("data = %s"%data)
 			json_data.close()
 			unityEditorPath = data['unity']['path']
 	except:
@@ -51,6 +53,11 @@ def getUnityPath():
 		else:
 			unityEditorPath = "/Applications/Unity/Hub/Editor"
 	return unityEditorPath
+
+def getUnityPaths():
+	pathFile = "%s/Assets/Resources/projectConfig.json"%getUnityProject()
+	print pathFile
+	return pathFile
 
 def getUnityVersions(myPath):
 	#list all versions of Unity on the system

@@ -19,7 +19,7 @@ import LTV_utilities.assetWrangle as assetWrangle
 import LTV_utilities.uiAction as ui
 from datetime import datetime
 		
-def prepFile(assetObject):
+def prepFile(assetObject,pathDict):
 	start=datetime.now()
 	persist.createFilePrefs() #make a node to save ui settings in the scene
 	filename = cmds.file(save=True) #save the scene file
@@ -129,9 +129,9 @@ def prepFile(assetObject):
 
 	### --- WRITE JSON --- ###
 	jsonFileName  = ('%s.json'%(filename.rsplit('/',1)[-1].split('.')[0])) #name json file based on scene file name
-	pathName = '%s/Assets/Resources/json/%s'%(unity.getUnityProject(),jsonFileName) #find the correct path for the file to go
+	pathName = '%s%s/%s'%(unity.getUnityProject(),pathDict["scene"]["description"]["path"],jsonFileName) #find the correct path for the file to go
 	try:
-		os.mkdir('%s/Assets/Resources/json'%(unity.getUnityProject())) #make the folder if it doesn't exist
+		os.mkdir('%s%s'%(unity.getUnityProject(),pathDict["scene"]["description"]["path"])) #make the folder if it doesn't exist
 	except:
 		pass
 	with open(pathName, mode='w') as feedsjson: #open the file for writing
@@ -155,6 +155,11 @@ def prepFile(assetObject):
 ###		UI		###
 
 def IoM_exportAnim_window():
+	pathDict = ""
+	with open(unity.getUnityPaths()) as json_data: #open .json
+		pathDict = json.load(json_data) #load json data into dictionary
+		json_data.close() #close file
+
 	exportForm = cmds.formLayout() #start form
 	#---------------------------------------------------------------------------------------------------------------------------------------------#
 	#Camera selection
@@ -191,7 +196,7 @@ def IoM_exportAnim_window():
 		cmds.rowLayout(numberOfColumns=3) #new row layout
 		publishedAsset.append(asset["transform"]) #add transform to asset dictionary
 		charName = cmds.getAttr("%s.publishName"%asset["transform"]).replace("_REF","") #get characters name 
-		f = "%s/Assets/Characters/Json/%s.json"%(unity.getUnityProject(),charName) #path to character definition
+		f = "%s%s/%s.json"%(unity.getUnityProject(),pathDict["characters"]["description"]["path"],charName) #path to character definition
 		outfitNames = [] #hold outfit names
 		try:
 			charDict = loadSave.loadJSON(f) #load character json
@@ -334,7 +339,7 @@ def IoM_exportAnim_window():
 		])
 	#---------------------------------------------------------------------------------------------------------------------------------------------#
 	#Main buttons
-	Button1 = cmds.button('Button1',l='Publish',h=50,c='prepFile(%s)'%publishedAsset)
+	Button1 = cmds.button('Button1',l='Publish',h=50,c='prepFile(%s,%s)'%(publishedAsset,pathDict))
 	Button2 = cmds.button('Button2',l='Close',h=50,c='cmds.deleteUI(\'Publish Animation\')') 
 	#UI layout
 	cmds.formLayout(
