@@ -79,9 +79,13 @@ def exportAnimation(obj,animOnly):
 	newName = '%s_%s'%(filename.rsplit('.',1)[0],objName)
 
 	objParent = cmds.listRelatives(obj,p=True)
+	if objParent:
+		objParent = objParent[0]
+	else:
+		objParent = obj
 	#select object to export
 	try:
-		exportObject = '%s|*CC_Base_BoneRoot'%(objParent[0])
+		exportObject = '%s|*CC_Base_BoneRoot'%(objParent)
 		print("correct exportObject = %s"%exportObject)
 		#exportObject = cmds.parent(exportObject, world=True)
 		cmds.select(exportObject,r=True)

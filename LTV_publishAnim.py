@@ -65,11 +65,19 @@ def prepFile(assetObject,pathDict):
 					cmds.rename(resolvedObjName,ns)
 					resolvedObjName = cmds.listRelatives(grp,c=True,f=True)[0] #find the asset node again
 				else:
-					grp = cmds.listRelatives(obj,p=True)[0]
+					print("obj = %s"%obj)
+					grp = cmds.listRelatives(obj,p=True)
+					if grp:
+						grp = grp[0]
+						print("grp = %s"%grp)
+					else:
+						grp = obj
 					resolvedObjName = obj
 
 				skeleton = "%s|CC_Base_BoneRoot"%resolvedObjName #find the skeleton
-				s = cmds.parent(skeleton,grp) #move the skeleton out of the asset node group
+				s = skeleton
+				if obj != grp:
+					s = cmds.parent(skeleton,grp) #move the skeleton out of the asset node group
 				childGeo = cmds.listRelatives('%s|Geometry'%resolvedObjName,c=True,f=True) #find the asset geometry 
 				movedGeo = [] #hold the names of the geo after it's been moved
 				for c in childGeo:
@@ -83,7 +91,8 @@ def prepFile(assetObject,pathDict):
 					publishName = cmds.getAttr('%s.publishName'%resolvedObjName) #get REF filename
 				except:
 					pass
-				cmds.parent(s,resolvedObjName) #parent skeleton back into asset group
+				if obj != grp:
+					cmds.parent(s,resolvedObjName) #parent skeleton back into asset group
 				for g in movedGeo: 
 					cmds.parent(g,"%s|Geometry"%resolvedObjName) #parent geo back into asset group
 
