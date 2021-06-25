@@ -8,29 +8,6 @@ import platform
 from LlamaIO import addAttribute
 import LTV_utilities.unityConfig as unity
 
-def cleanTexturePaths():
-    fileNodes = cmds.ls(type='file')
-    #project folder
-    workspace = cmds.workspace( q=True, directory=True, rd=True)
-    #texture folder
-    textureFolder = cmds.workspace(fre='sourceImages')
-    #full path
-    fullPath=os.path.realpath('%s%s'%(workspace,textureFolder))
-    
-    for f in fileNodes:
-        imgPath = cmds.getAttr('%s.fileTextureName'%f)
-        parentFolder,remainingPath = getParentFolder()
-        relativePath = '%s/%s'%(remainingPath,imgPath.split('/')[-1])
-        #check if the file exists
-        if os.path.isfile('%s/%s'%(fullPath,relativePath)):
-            #change path    
-            cmds.filePathEditor('%s.fileTextureName'%f,repath=relativePath.rsplit('/',1)[0],f=True)
-        #check if file exists in wrong place
-        elif os.path.isfile(imgPath):
-            copyfile(imgPath, '%s/%s'%(fullPath,relativePath))
-            #update path
-            cmds.filePathEditor('%s.fileTextureName'%f,repath=relativePath.rsplit('/',1)[0],f=True)
-
 def connectAttribute(objOut,attrOut,objIn,attrIn):
 	#remove illegal characters
 	attrIn = attrIn.split('|')[-1]
@@ -170,8 +147,6 @@ def PublishModelCheckText():
 		
 		#full path to scene
 		scenePath = cmds.file(q=True,sn=True)
-		#clean up texture paths
-		#cleanTexturePaths()
 		#binary
 		makeRefLog = [0,0,0]
 		cmds.select(tempSelect,r=True)
