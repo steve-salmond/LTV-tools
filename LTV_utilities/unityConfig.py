@@ -7,8 +7,7 @@ import maya.cmds as cmds
 import LTV_utilities.fileWrangle as fileWrangle
 
 def preferedUnityVersion():
-	projPath = getProj.getProject()
-	settingsFile = '%sdata/projectSettings.json'%(projPath)
+	settingsFile = "%s/Assets/Resources/projectConfig.json"%getUnityProject()
 	preferedVersion = "No prefered version set"
 	try:
 		with open(settingsFile) as json_data:

@@ -314,10 +314,10 @@ def installToolboxWindow():
 			cmds.menuItem( label='Manually install scripts' )
 		if (i==0):
 			cmds.menuItem( label=os.path.realpath(__file__).rsplit('\\',1)[0].rsplit('/',1)[0])
-		if (i<7):
-			isSystemPath = FilterOutSystemPaths(part)
-			if (isSystemPath == 0):
-				cmds.menuItem( label=part )
+		#if (i<7):
+		#	isSystemPath = FilterOutSystemPaths(part)
+		#	if (isSystemPath == 0):
+		#		cmds.menuItem( label=part )
 			
 	iconsMenu = cmds.optionMenu('iconsMenu')  
 	iconsPaths = os.getenv('XBMLANGPATH')
