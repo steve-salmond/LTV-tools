@@ -18,6 +18,7 @@ import LTV_utilities.unityConfig as unity
 import LTV_utilities.assetWrangle as assetWrangle
 import LTV_utilities.uiAction as ui
 from datetime import datetime
+
 		
 def prepFile(assetObject,pathDict):
 	start=datetime.now()
@@ -57,12 +58,14 @@ def prepFile(assetObject,pathDict):
 					cmds.file(refPath,ir=True,referenceNode=refNode) #import reference to scene
 				nsLen = obj.split(":") #check if there is a namespace
 				if len(nsLen) > 1:
-					ns = obj.split(":")[0].split("|")[-1] #get namespace name
-					grp = cmds.group(em=True,n="%s_grp"%ns) #make a group using the namespace
+					ns = obj.rsplit(":",1)[0].split("|")[-1] #get namespace name
+					objName = obj.rsplit(":",1)[-1] #get namespace name
+					#ns = obj.split(":")[0].split("|")[-1] #get namespace name
+					grp = cmds.group(em=True,n="%s_grp"%objName) #make a group using the namespace
 					cmds.parent(obj,grp) #parent the top asset node to the group
 					cmds.namespace(moveNamespace=(ns,":"),force=True) #delete the namespace
 					resolvedObjName = cmds.listRelatives(grp,c=True,f=True)[0] #find the asset node again
-					cmds.rename(resolvedObjName,ns)
+					cmds.rename(resolvedObjName,ns.split(":")[-1]) #rename obj to namespace in case top node has geneneric name
 					resolvedObjName = cmds.listRelatives(grp,c=True,f=True)[0] #find the asset node again
 				else:
 					grp = cmds.group(em=True,n="%s_grp"%obj) #make a group using the namespace
@@ -195,7 +198,7 @@ def IoM_exportAnim_window():
 		assetsLabel = cmds.text('assetsLabel',label='Assets',w=40,al='left') #assets label
 		boxLayout = cmds.columnLayout('boxLayout',columnAttach=('both', 5), rowSpacing=10, columnWidth=350 ) #new box layout
 		for asset in publishedAssets: #for each asset
-			cmds.rowLayout(numberOfColumns=3) #new row layout
+			cmds.rowLayout(numberOfColumns=4) #new row layout
 			publishedAsset.append(asset["transform"]) #add transform to asset dictionary
 			charName = cmds.getAttr("%s.publishName"%asset["transform"]).replace("_REF","") #get characters name 
 			f = "%s%s/%s.json"%(unity.getUnityProject(),pathDict["characters"]["description"]["path"],charName) #path to character definition
@@ -216,13 +219,20 @@ def IoM_exportAnim_window():
 				key = labelName
 				if asset["transform"] in preferedOutfitDict:
 					key = asset["transform"]
+					
 				cmds.optionMenu(outfitSelection,v=preferedOutfitDict[key],e=True) #set prefered outfit from persistence node
+				try:
+					nodeOutfit = cmds.getAttr("%s.outfit"%(asset["transform"]),asString=True)
+					cmds.optionMenu(outfitSelection,v=nodeOutfit,e=True) #set prefered outfit from persistence node
+				except:
+					pass
 			except:
 				pass
 
 			if asset["correctFile"] == 0:
 				errorButton = cmds.iconTextButton( style='iconOnly', image1='IoMError.svg', label='spotlight',h=20,w=20,annotation='Incorrect file used' ) #make error button if using the wrong reference file
 				cmds.iconTextButton(errorButton,e=True,c='assetWrangle.fixRef(\"%s\",\"%s\")'%(asset["transform"],errorButton)) #add fix command to error button
+			selButton = cmds.button(label=' ',h=20,w=20 ,c='ui.selRef(\"%s\")'%asset["transform"]) #make error button if using the wrong reference file
 			cmds.setParent( '..' )
 		cmds.setParent( '..' )
 		#UI layout
