@@ -98,6 +98,15 @@ def makeRef(refName,publishString):
 	#add attribute to node for re-publishing
 	addAttribute(publishString,'publishName',refName)
 
+	attrName = "outfit"
+	if cmds.attributeQuery(attrName,node="Main",exists=True):
+	    e = cmds.attributeQuery(attrName,node="Main",listEnum=True)[0]
+	    if cmds.attributeQuery(attrName,node=publishString,exists=True):
+	    	cmds.deleteAttr(publishString,at=attrName)
+	    cmds.addAttr(publishString,ln=attrName,attributeType='enum',enumName=e)
+	    cmds.setAttr('%s.%s'%(publishString,attrName),e=True,keyable=True)
+	    cmds.connectAttr("Main.outfit","%s.outfit"%publishString,f=True)
+
 	
 	#get parent folder
 	scenePath = cmds.file(q=True,sn=True)
