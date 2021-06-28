@@ -141,30 +141,16 @@ def IoM_sceneSetup_window():
 	setupButton = cmds.button('setupButton',l='Scene Setup',h=50,c='doSetup()')
 	cmds.separator(height=20, style='in' )
 	staticButtonForm = cmds.formLayout()
-	camButton = cmds.button('camButton',l='Add Camera',h=50,c='addCamera()')
-	sunButton = cmds.button('sunButton',l='Add Sun',h=50,c='addSun()')
+	#camButton = cmds.button('camButton',l='Add Camera',h=50,c='addCamera()')
+	#sunButton = cmds.button('sunButton',l='Add Sun',h=50,c='addSun()')
 
-	cmds.formLayout(
-			staticButtonForm,
-			edit=True,
-			attachForm=[
-				(camButton,'left',0),
-				(sunButton,'right',0)
-				],
-			attachControl=[
-				(sunButton,'left',0,camButton)
-				],
-			attachPosition=[
-				(camButton,'right',0,50)
-				]
-	)
+	
 
 	cmds.setParent( '..' )
-	sep1 = cmds.separator('sep1',height=20, style='in' )
 	
 	assetsLabel = cmds.text('assetsLabel',label='Load assets',w=40,al='left',fn="boldLabelFont",h=20)
 	for assetType in assetDict:
-		cmds.frameLayout( label=assetType,collapsable=True,collapse=True)
+		cmds.frameLayout( label=assetType,collapsable=True,collapse=False)
 		rowLayout = cmds.rowLayout(numberOfColumns=2,adj=1,cat=(2,"right",0))
 		assetList = cmds.textScrollList('%sList'%assetType, h=80,allowMultiSelection=True)
 		for asset in assetDict[assetType]:

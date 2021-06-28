@@ -7,13 +7,14 @@ import maya.cmds as cmds
 import LTV_utilities.fileWrangle as fileWrangle
 
 def preferedUnityVersion():
-	settingsFile = "%s/Assets/Resources/projectConfig.json"%getUnityProject()
+	settingsFile = "%s/ProjectSettings/ProjectVersion.txt"%getUnityProject()
 	preferedVersion = "No prefered version set"
 	try:
-		with open(settingsFile) as json_data:
-			data = json.load(json_data)
-			json_data.close()
-			preferedVersion = (data['unity']['preferedVersion'])
+		file = open(settingsFile)
+		line1 = file.readline()
+		print line1
+		preferedVersion = line1.split(":")[-1].strip()
+		file.close()
 	except:
 		print("Project settings not found, make sure you have set your project")
 	return preferedVersion
