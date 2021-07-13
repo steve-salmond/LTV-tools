@@ -96,7 +96,8 @@ def makeRef(refName,publishString):
 	refFileName  = refName+'.ma'
 
 	#add attribute to node for re-publishing
-	addAttribute(publishString,'publishName',refName)
+	addAttribute(publishString,'publishName',refName) #add publish name attribute
+	
 
 	attrName = "outfit"
 	if cmds.attributeQuery(attrName,node="Main",exists=True):
@@ -112,6 +113,8 @@ def makeRef(refName,publishString):
 	scenePath = cmds.file(q=True,sn=True)
 	parentFolder = scenePath.rsplit('/',2)[0]
 	currentFolder = scenePath.rsplit('/',2)[1]
+
+	addAttribute(publishString,'assetType',parentFolder.split('/')[-1]) #add asset type attribute
 	
 	#output name
 	pathName = parentFolder+'/'+refFileName

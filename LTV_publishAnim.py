@@ -87,6 +87,11 @@ def prepFile(assetObject,pathDict):
 					publishName = cmds.getAttr('%s.publishName'%resolvedObjName) #get REF filename
 				except:
 					pass
+				assetType = ""
+				try:
+					assetType = cmds.getAttr('%s.assetType'%resolvedObjName) #get REF filename
+				except:
+					pass
 				cmds.parent(s,resolvedObjName) #parent skeleton back into asset group
 				for g in movedGeo: 
 					cmds.parent(g,"%s|Geometry"%resolvedObjName) #parent geo back into asset group
@@ -95,7 +100,7 @@ def prepFile(assetObject,pathDict):
 				displayName = publishName.split("_")[0]
 				#displayName = re.split('\d+', newName)[-1][1:]
 				
-				charDict = {"name":  displayName,"anim": "%s/%s"%(remainingPath,newName.split('/')[-1]),"outfit": outfits[i]} 
+				charDict = {"name":  displayName,"assetType":  assetType,"anim": "%s/%s"%(remainingPath,newName.split('/')[-1]),"outfit": outfits[i]} 
 				#charDict = {"name":  displayName,"model": publishName,"anim": "%s/%s"%(remainingPath,newName.split('/')[-1]),"outfit": outfitName} 
 				sceneDict["characters"].append(charDict) #add to scene dictionary
 
