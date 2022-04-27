@@ -111,16 +111,17 @@ def exportAnimation(obj,animOnly):
 	#make folder if it doesn't exist
 	if not os.path.exists(pathName.rsplit('/',1)[0]):
 		os.makedirs(pathName.rsplit('/',1)[0])
-	
-	#load fbx presets from file
-	#mel.eval("FBXLoadExportPresetFile -f \"%s/data/IoM_animExport.fbxexportpreset\";"%getProj.getProject())
+
 	#export fbx
-	#cmds.file(pathName,force=True,type='FBX export',relativeNamespace=ns,es=True)
-	cmds.FBXExportFileVersion("-v","FBX201100") 
-	cmds.FBXExportBakeComplexAnimation("-v",True)
-	cmds.FBXExportAnimationOnly("-v",animOnly)
-	cmds.FBXExportUseSceneName ("-v",True)
-	cmds.FBXExport('-file', pathName,'-s')
+	try:
+		cmds.loadPlugin("fbxmaya")		#load plugin
+	except:
+		pass
+	cmds.FBXExportFileVersion("-v","FBX201100") 	#set fbx version
+	cmds.FBXExportBakeComplexAnimation("-v",True)	#set export animation
+	cmds.FBXExportAnimationOnly("-v",animOnly)		#set export animation only
+	cmds.FBXExportUseSceneName ("-v",True)			#set use scene name
+	cmds.FBXExport('-file', pathName,'-s')			#do the export 
 	#restore the filename
 	cmds.file(rename=filename)
 

@@ -27,16 +27,17 @@ def prepFile(assetObject,pathDict):
 	parentFolder,remainingPath = fileWrangle.getParentFolder() #get the path to parent folder
 	startFrame = sceneVar.getStartFrame() #start frame
 	endFrame = sceneVar.getEndFrame() #end frame
-
 	blendGeo = [] #hold blendshapes
 	blendShapes = cmds.ls(type='blendShape') #find all blendshapes
-	cmds.bakeResults(blendShapes,simulation=True,t=(startFrame,endFrame),hierarchy='below',sampleBy=1,oversamplingRate=1,disableImplicitControl=True,preserveOutsideKeys=True,sparseAnimCurveBake=False,removeBakedAttributeFromLayer=False,removeBakedAnimFromLayer=False,bakeOnOverrideLayer=False,minimizeRotation=True,controlPoints=False,shape=True)
+	if blendShapes:
+		cmds.bakeResults(blendShapes,simulation=True,t=(startFrame,endFrame),hierarchy='below',sampleBy=1,oversamplingRate=1,disableImplicitControl=True,preserveOutsideKeys=True,sparseAnimCurveBake=False,removeBakedAttributeFromLayer=False,removeBakedAnimFromLayer=False,bakeOnOverrideLayer=False,minimizeRotation=True,controlPoints=False,shape=True)
 
 	### --- ASSETS --- ###
 
 	#add objects to selection if they are checked
 	sel = [] #list for checked assets
 	outfits = []
+
 	#deformationSystems = [] #list for asset rigs
 	sceneDict = {"cameras": [],"characters": [],"extras": [],"sets": []} #dictionary for publish
 	rows = cmds.columnLayout('boxLayout',ca=True,q=True) #list asset ui rows
@@ -239,6 +240,8 @@ def IoM_exportAnim_window():
 					pass
 			except:
 				pass
+			if not outfitNames:
+				cmds.optionMenu(outfitSelection,visible=False,e=True)
 
 			if asset["correctFile"] == 0:
 				errorButton = cmds.iconTextButton( style='iconOnly', image1='IoMError.svg', label='spotlight',h=20,w=20,annotation='Incorrect file used' ) #make error button if using the wrong reference file
