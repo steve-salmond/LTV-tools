@@ -331,11 +331,11 @@ def IoM_exportAnim_window():
 			cmds.menuItem(l=v) #add versions to menu
 		preferedVersion = unity.preferedUnityVersion()	#look for a prefered version of unity
 		try:
-			cmds.optionMenu('versionSelection',v=preferedVersion,e=True) #set the prefered version if it exists
+			cmds.optionMenu('versionSelection',v=preferedVersion,enable=False) #set the prefered version if it exists
 		except:
 			pass
-		unityCheck = cmds.checkBox('unityCheck',l="",annotation="Generate Unity scene file",v=True,cc='ui.disableMenu(\'unityCheck\',[\'versionSelection\'],[\'unityPath\'])') #checkbox to make unity file
-		unityPath = cmds.textFieldButtonGrp('unityPath',tx=myPath,buttonLabel='...',bc="unity.browseToFolder()") #textfield button to set path to unity
+		unityCheck = cmds.checkBox('unityCheck',l="",value=False,annotation="Generate Unity scene file",v=True,cc='ui.disableMenu(\'unityCheck\',[\'versionSelection\'],[\'unityPath\'])') #checkbox to make unity file
+		unityPath = cmds.textFieldButtonGrp('unityPath',tx=myPath,buttonLabel='...',enable=False,bc="unity.browseToFolder()") #textfield button to set path to unity
 		#UI layout
 		cmds.formLayout(
 			exportForm,

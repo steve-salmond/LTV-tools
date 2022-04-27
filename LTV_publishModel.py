@@ -51,15 +51,20 @@ def getParentFolder():
 def makeFbx(refName,obj):
 	#unparent rig and geo
 	geo = '|%s|Geometry'%obj
-	worldGeo = []
-	childGeo = cmds.listRelatives(geo,c=True)
-	for c in childGeo:
-		g = cmds.parent( c, world=True ) #parent to world
-		worldGeo += g
-	bodyRig = '|%s|CC_Base_BoneRoot'%obj #find skeleton
-	cmds.parent( bodyRig, world=True ) #parent to world
-	bodyRig = 'CC_Base_BoneRoot' #re-define skeleton object
 
+	if cmds.objExists('|%s|CC_Base_BoneRoot'%obj):
+		worldGeo = []
+		childGeo = cmds.listRelatives(geo,c=True)
+		for c in childGeo:
+			g = cmds.parent( c, world=True ) #parent to world
+			worldGeo += g
+		bodyRig = '|%s|CC_Base_BoneRoot'%obj #find skeleton
+		cmds.parent( bodyRig, world=True ) #parent to world
+		bodyRig = 'CC_Base_BoneRoot' #re-define skeleton object
+	else:
+		bodyRig = '|%s|DeformationSystem'%obj
+		worldGeo = [geo]
+	
 	#export fbx
 	#define full file name
 	refFileName  = refName+'.fbx'
@@ -82,13 +87,17 @@ def makeFbx(refName,obj):
 	cmds.FBXExportAnimationOnly("-v",False)
 	cmds.FBXExportUseSceneName ("-v",False)
 	cmds.FBXExport('-file', pathName,'-s')
+	print(pathName)
 
 	#reselect initial selection
 	cmds.select(obj,r=True)
 
-	cmds.parent( bodyRig, obj ) #parent back in hierarchy
-	for g in worldGeo:
-		cmds.parent( g, geo ) #parent to world
+	try:
+		cmds.parent( bodyRig, obj ) #parent back in hierarchy
+		for g in worldGeo:
+			cmds.parent( g, geo ) #parent to world
+	except:
+		pass
 
 #export .ma
 def makeRef(refName,publishString):
@@ -163,7 +172,10 @@ def PublishModelCheckText():
 		makeRefLog = [0,0,0]
 		cmds.select(tempSelect,r=True)
 		#connect blendshape geo to rig
-		bodyRig = '|%s|CC_Base_BoneRoot'%tempSelect[0]
+		if cmds.objExists('|%s|CC_Base_BoneRoot'%tempSelect[0]):
+			bodyRig = '|%s|CC_Base_BoneRoot'%tempSelect[0]
+		else:
+			bodyRig = '|%s|DeformationSystem'%tempSelect[0]
 		blendshapes = findGeoWithBlendShapes()
 		for b in blendshapes:
 			connectAttribute(b,'message',bodyRig,b)
