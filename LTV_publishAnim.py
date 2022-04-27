@@ -72,7 +72,10 @@ def prepFile(assetObject,pathDict):
 					cmds.parent(obj,grp) #parent the top asset node to the group
 					resolvedObjName = cmds.listRelatives(grp,c=True,f=True)[0] #find the asset node again
 
-				skeleton = "%s|CC_Base_BoneRoot"%resolvedObjName #find the skeleton
+				if cmds.objExists('|%s|CC_Base_BoneRoot'%resolvedObjName):
+					skeleton = "%s|CC_Base_BoneRoot"%resolvedObjName #find the skeleton
+				else:
+					skeleton = "%s|DeformationSystem"%resolvedObjName #find the skeleton
 				s = cmds.parent(skeleton,grp) #move the skeleton out of the asset node group
 				childGeo = cmds.listRelatives('%s|Geometry'%resolvedObjName,c=True,f=True) #find the asset geometry 
 				movedGeo = [] #hold the names of the geo after it's been moved
@@ -92,9 +95,12 @@ def prepFile(assetObject,pathDict):
 					assetType = cmds.getAttr('%s.assetType'%resolvedObjName) #get REF filename
 				except:
 					pass
-				cmds.parent(s,resolvedObjName) #parent skeleton back into asset group
-				for g in movedGeo: 
-					cmds.parent(g,"%s|Geometry"%resolvedObjName) #parent geo back into asset group
+				try:
+					cmds.parent(s,resolvedObjName) #parent skeleton back into asset group
+					for g in movedGeo: 
+						cmds.parent(g,"%s|Geometry"%resolvedObjName) #parent geo back into asset group
+				except:
+					pass
 
 				#format json
 				displayName = publishName.split("_")[0]
@@ -331,7 +337,7 @@ def IoM_exportAnim_window():
 			cmds.menuItem(l=v) #add versions to menu
 		preferedVersion = unity.preferedUnityVersion()	#look for a prefered version of unity
 		try:
-			cmds.optionMenu('versionSelection',v=preferedVersion,enable=False) #set the prefered version if it exists
+			cmds.optionMenu('versionSelection',v=preferedVersion,enable=False,e=False) #set the prefered version if it exists
 		except:
 			pass
 		unityCheck = cmds.checkBox('unityCheck',l="",value=False,annotation="Generate Unity scene file",v=True,cc='ui.disableMenu(\'unityCheck\',[\'versionSelection\'],[\'unityPath\'])') #checkbox to make unity file

@@ -85,9 +85,12 @@ def exportAnimation(obj,animOnly):
 		objParent = obj
 	#select object to export
 	try:
-		exportObject = '%s|*CC_Base_BoneRoot'%(objParent)
+		if cmds.objExists('|%s|*CC_Base_BoneRoot'%objParent):
+			exportObject = '%s|*CC_Base_BoneRoot'%(objParent)
+			#exportObject = cmds.parent(exportObject, world=True)
+		else:
+			exportObject = '%s|*DeformationSystem'%(objParent)
 		print("correct exportObject = %s"%exportObject)
-		#exportObject = cmds.parent(exportObject, world=True)
 		cmds.select(exportObject,r=True)
 	except:
 		exportObject = obj
