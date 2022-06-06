@@ -62,7 +62,7 @@
 				"icon":"installToolbox.svg",
 				"label":"install or update toolbox",
 				"script":"installToolbox.mel",
-				"modules": ["toolboxShelf.json","installToolbox.mel","installToolbox.py"],
+				"modules": ["toolboxShelf.json","installToolbox.mel","installToolbox.py","baseIO/loadSave.py"],
 				"command":"source installToolbox;installToolbox;",
 				"stp":"mel"
 			},
