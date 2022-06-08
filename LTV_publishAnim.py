@@ -183,8 +183,10 @@ def IoM_exportAnim_window():
 		#variables
 		allCameras = cam.listAllCameras()
 		#UI
+		projectLabel = cmds.text('projectLabel',label='Project',w=40,al='left') #project label
+		projectSelection = cmds.optionMenu('projectSelection') #make project menu
 		cameraLabel = cmds.text('cameraLabel',label='Camera',w=40,al='left') #camera label
-		cameraSelection = cmds.optionMenu('cameraSelection') #make menu
+		cameraSelection = cmds.optionMenu('cameraSelection') #make camera menu
 		for camera in allCameras:
 			cmds.menuItem(l=camera) #add cameras to menu
 		#UI layout
@@ -192,8 +194,13 @@ def IoM_exportAnim_window():
 			exportForm,
 			edit=True,
 			attachForm=[
-			(cameraLabel,'top',20),
-			(cameraSelection,'top',15),
+			(projectLabel,'top',20),
+			(projectLabel,'left',10),
+			(projectSelection,'top',15),
+			(projectSelection,'right',10),
+			(projectSelection,'left',80),
+			(cameraLabel,'top',50),
+			(cameraSelection,'top',45),
 			(cameraSelection,'right',10),
 			(cameraLabel,'left',10),
 			(cameraSelection,'left',80)
@@ -256,7 +263,7 @@ def IoM_exportAnim_window():
 			attachForm=[
 			(sep_assets,'right',10),
 			(sep_assets,'left',10),
-			(sep_assets,'top',60),
+			(sep_assets,'top',90),
 			(assetsLabel,'left',10),
 			(boxLayout,'left',80),
 			],
