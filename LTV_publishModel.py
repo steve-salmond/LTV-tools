@@ -292,6 +292,8 @@ def setTextField():
 def IO_publishModel_window():
 	#UI objects
 	publishForm = cmds.formLayout()
+	projLabel = cmds.text(label='Project')
+	projSelection = cmds.optionMenu('projSelection')
 	textLabel = cmds.text(label='Publish Name')
 	nameText = cmds.textField('nameText',w=250)
 	reloadButton = cmds.iconTextButton(style='iconOnly',image1='refresh.png',c='setText()')
@@ -302,17 +304,22 @@ def IO_publishModel_window():
 		publishForm,
 		edit=True,
 		attachForm=[
-		(textLabel,'top',15),
+		(projLabel,'top',15),
+		(projLabel,'left',10),
+		(projSelection,'top',10),
+		(textLabel,'top',40),
 		(textLabel,'left',10),
-		(reloadButton,'top',10),
+		(reloadButton,'top',35),
 		(reloadButton,'right',10),
-		(nameText,'top',10),
+		(nameText,'top',35),
 		(btn1,'bottom',0),
 		(btn1,'left',0),
 		(btn2,'bottom',0),
 		(btn2,'right',0)
 		],
 		attachControl=[
+		(projSelection,'left',10,textLabel),
+		(projSelection,'right',10,reloadButton),
 		(nameText,'left',10,textLabel),
 		(nameText,'right',10,reloadButton),
 		(btn2,'left',0,btn1)
