@@ -27,7 +27,7 @@ def getUnityProject():
 		with open(prefFile) as json_data:
 			data = json.load(json_data)
 			json_data.close()
-			unityProjectPath = data['unity']['project']
+			unityProjectPath = data['unity']['projects']
 			activeProject = data['unity']['active']
 	except:
 		print 'no existing pref file found'
@@ -122,7 +122,7 @@ def browseToProject():
 	currentProjects,activeProject = getUnityProject()
 	if folder:
 		currentProjects.append(folder[0])
-		updatePrefs("project",currentProjects) #update pref to file
+		updatePrefs("projects",currentProjects) #update pref to file
 		cmds.optionMenu('projSelection',e=True)
 		cmds.menuItem( label=folder[0])
 		cmds.optionMenu('projSelection',e=True,value=folder[0])
