@@ -142,9 +142,9 @@ def prepFile(assetObject,pathDict):
 
 	### --- WRITE JSON --- ###
 	jsonFileName  = ('%s.json'%(filename.rsplit('/',1)[-1].split('.')[0])) #name json file based on scene file name
-	pathName = '%s%s/%s'%(unity.getUnityProject(),pathDict["scene"]["description"]["path"],jsonFileName) #find the correct path for the file to go
+	pathName = '%s%s/%s'%(cmds.optionMenu('projectSelection'),pathDict["scene"]["description"]["path"],jsonFileName) #find the correct path for the file to go
 	try:
-		os.mkdir('%s%s'%(unity.getUnityProject(),pathDict["scene"]["description"]["path"])) #make the folder if it doesn't exist
+		os.mkdir('%s%s'%(cmds.optionMenu('projectSelection'),pathDict["scene"]["description"]["path"])) #make the folder if it doesn't exist
 	except:
 		pass
 	with open(pathName, mode='w') as feedsjson: #open the file for writing
@@ -165,9 +165,14 @@ def prepFile(assetObject,pathDict):
 	dt = datetime.now()-start
 	print ("Time taken = %s"%(dt)) 
 
+def changeSelection():
+	i=cmds.optionMenu('projectSelection',q=True,select=True)
+	unity.updatePrefs('active',i-1)
+
 ###		UI		###
 
 def IoM_exportAnim_window():
+	currentProjects,activeProject = unity.getUnityProject()
 	pathDict = ""
 	try:
 		with open(unity.getUnityPaths()) as json_data: #open .json
@@ -184,7 +189,11 @@ def IoM_exportAnim_window():
 		allCameras = cam.listAllCameras()
 		#UI
 		projectLabel = cmds.text('projectLabel',label='Project',w=40,al='left') #project label
-		projectSelection = cmds.optionMenu('projectSelection') #make project menu
+		projectSelection = cmds.optionMenu('projectSelection',cc="changeSelection()") #make project menu
+		currentProjects,activeProject = unity.getUnityProject()
+		for project in currentProjects:
+			cmds.menuItem( label=project )
+		cmds.optionMenu('projectSelection',e=True,select=activeProject+1)
 		cameraLabel = cmds.text('cameraLabel',label='Camera',w=40,al='left') #camera label
 		cameraSelection = cmds.optionMenu('cameraSelection') #make camera menu
 		for camera in allCameras:
@@ -211,7 +220,8 @@ def IoM_exportAnim_window():
 		preferedAssetOutfits = persist.readFilePrefs('Assets') #get outfits from previous save
 		publishedAssets = assetWrangle.findPublishedAssets() #find all published objects by searching for the 'publishName' attribute
 		publishedAsset = [] #published asset null
-		unityPath = unity.getUnityProject()
+		#unityPath = unity.getUnityProject()
+		unityPath = cmds.optionMenu('projectSelection',q=True,value=True)
 		#UI
 		sep_assets = cmds.separator("sep_assets",height=4, style='in' ) #top of assets section
 		assetsLabel = cmds.text('assetsLabel',label='Assets',w=40,al='left') #assets label
@@ -220,7 +230,7 @@ def IoM_exportAnim_window():
 			cmds.rowLayout(numberOfColumns=4) #new row layout
 			publishedAsset.append(asset["transform"]) #add transform to asset dictionary
 			charName = cmds.getAttr("%s.publishName"%asset["transform"]).replace("_REF","") #get characters name 
-			f = "%s%s/%s.json"%(unity.getUnityProject(),pathDict["characters"]["description"]["path"],charName) #path to character definition
+			f = "%s%s/%s.json"%(unityPath,pathDict["characters"]["description"]["path"],charName) #path to character definition
 			outfitNames = [] #hold outfit names
 			try:
 				charDict = loadSave.loadJSON(f) #load character json
@@ -302,7 +312,7 @@ def IoM_exportAnim_window():
 		#---------------------------------------------------------------------------------------------------------------------------------------------#
 		#Environment
 		#variables
-		sets = fileWrangle.listAbsFiles('%s/Assets/Scenes/Sets'%unity.getUnityProject(),'unity') #list all the environments in the Unity project
+		sets = fileWrangle.listAbsFiles('%s/Assets/Scenes/Sets'%unityPath,'unity') #list all the environments in the Unity project
 		sets = sorted(sets) #sort alphabetaclly #sort the environments
 		#UI
 		sep3 = cmds.separator("sep3",height=4, style='in' )

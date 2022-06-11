@@ -7,7 +7,8 @@ import maya.cmds as cmds
 import LTV_utilities.fileWrangle as fileWrangle
 
 def preferedUnityVersion():
-	settingsFile = "%s/ProjectSettings/ProjectVersion.txt"%getUnityProject()
+	currentProjects,activeProject = getUnityProject()
+	settingsFile = "%s/ProjectSettings/ProjectVersion.txt"%currentProjects[activeProject]
 	preferedVersion = "No prefered version set"
 	try:
 		file = open(settingsFile)
@@ -27,12 +28,14 @@ def getUnityProject():
 			data = json.load(json_data)
 			json_data.close()
 			unityProjectPath = data['unity']['project']
+			activeProject = data['unity']['active']
 	except:
 		print 'no existing pref file found'
 		parentFolder,remainingPath = fileWrangle.getParentFolder()
-		unityProjectPath = "%s/Unity"%parentFolder
+		unityProjectPath = ["%s/Unity"%parentFolder]
+		activeProject = 0
 
-	return unityProjectPath
+	return unityProjectPath,activeProject
 
 def getUnityPath():
 	prefPath = fileWrangle.userPrefsPath()
@@ -52,7 +55,8 @@ def getUnityPath():
 	return unityEditorPath
 
 def getUnityPaths():
-	pathFile = "%s/Assets/Resources/projectConfig.json"%getUnityProject()
+	currentProjects,activeProject = getUnityProject()
+	pathFile = "%s/Assets/Resources/projectConfig.json"%currentProjects[activeProject]
 	return pathFile
 
 def getUnityVersions(myPath):
@@ -106,10 +110,21 @@ def browseToFolder():
 	except:
 		pass
 
+#def browseToProject():
+#	folder = cmds.fileDialog2(fileMode=3, dialogStyle=1)
+#	if folder:
+#		cmds.textFieldButtonGrp('projectPath',e=True,tx=folder[0])
+		
+#	updatePrefs("project",folder[0]) #update pref to file
+
 def browseToProject():
 	folder = cmds.fileDialog2(fileMode=3, dialogStyle=1)
+	currentProjects,activeProject = getUnityProject()
 	if folder:
-		cmds.textFieldButtonGrp('projectPath',e=True,tx=folder[0])
-		
-	updatePrefs("project",folder[0]) #update pref to file
+		currentProjects.append(folder[0])
+		updatePrefs("project",currentProjects) #update pref to file
+		cmds.optionMenu('projSelection',e=True)
+		cmds.menuItem( label=folder[0])
+		cmds.optionMenu('projSelection',e=True,value=folder[0])
+
 

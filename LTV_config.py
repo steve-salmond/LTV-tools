@@ -3,6 +3,10 @@ import LTV_utilities.unityConfig as unity
 
 ### --- UI --- ###
 
+def changeSelection():
+	i=cmds.optionMenu('projSelection',q=True,select=True)
+	unity.updatePrefs('active',i-1)
+
 def LTV_config_window():
 	configForm = cmds.formLayout() #start the form
 	#Unity Binary location
@@ -39,11 +43,16 @@ def LTV_config_window():
 		)
 	#Unity Project location
 	#Variables
-	unityProject = unity.getUnityProject() #try find existing config, uses path relative to maya project if non found
+	unityProjects,activeProject = unity.getUnityProject() #try find existing config, uses path relative to maya project if non found
 	#UI
 	sep_proj = cmds.separator("sep_proj",height=4, style='in' ) #top separator & project config anchor
-	projectLabel = cmds.text('projectLabel',label='Project path',w=100,al='left') #project label
-	projectPath = cmds.textFieldButtonGrp('projectPath',tx=unityProject,buttonLabel='...',bc="unity.browseToProject()") #project textfield button
+	projectLabel = cmds.text('projectLabel',label='Project paths',w=100,al='left') #project label
+	addProjectButton = cmds.button('addProjectButton',l='Add',h=25,w=100,c='unity.browseToProject()')
+	removeProjectButton = cmds.button('removeProjectButton',l='Remove',h=25,w=100,c='')
+	projSelection = cmds.optionMenu('projSelection',cc="changeSelection()")
+	for project in unityProjects:
+		cmds.menuItem( label=project )
+	cmds.optionMenu('projSelection',e=True,select=activeProject+1)
 	# UI layout
 	cmds.formLayout(
 		configForm,
@@ -52,13 +61,21 @@ def LTV_config_window():
 		(sep_proj,'top',90),
 		(sep_proj,'right',10),
 		(sep_proj,'left',10),
+		(removeProjectButton,'right',10),
 		(projectLabel,'left',10),
-		(projectPath,'right',10)
+		(projSelection,'right',10)
 		],
 		attachControl=[
 		(projectLabel,'top',10,sep_proj),
-		(projectPath,'top',6,sep_proj),
-		(projectPath,'left',10,projectLabel)
+		(addProjectButton,'top',6,sep_proj),
+		(addProjectButton,'left',10,projectLabel),
+		(removeProjectButton,'top',6,sep_proj),
+		(removeProjectButton,'left',1,addProjectButton),
+		(projSelection,'top',6,addProjectButton),
+		(projSelection,'left',10,projectLabel)
+		],
+		attachPosition=[
+		(addProjectButton,'right',5,65),
 		]
 		)
 

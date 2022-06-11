@@ -73,7 +73,9 @@ def makeFbx(refName,obj):
 	parentFolder,remainingPath = getParentFolder()
 	
 	#output name
-	pathName = '%s/Assets/Resources/%s/%s'%(unity.getUnityProject(),remainingPath.rsplit('/',1)[0],refFileName)
+	projSelection = cmds.optionMenu('projSelection',q=True,value=True)
+	pathName = '%s/Assets/Resources/%s/%s'%(projSelection,remainingPath.rsplit('/',1)[0],refFileName)
+	#pathName = '%s/Assets/Resources/%s/%s'%(unity.getUnityProject(),remainingPath.rsplit('/',1)[0],refFileName)
 	if not os.path.exists(pathName.rsplit('/',1)[0]):
 		os.makedirs(pathName.rsplit('/',1)[0])
 
@@ -289,11 +291,19 @@ def setTextField():
 	publishName = assumedPublishName()
 	cmds.textField('nameText',e=True,tx=publishName)
 
+def changeSelection():
+	i=cmds.optionMenu('projSelection',q=True,select=True)
+	unity.updatePrefs('active',i-1)
+
 def IO_publishModel_window():
 	#UI objects
 	publishForm = cmds.formLayout()
 	projLabel = cmds.text(label='Project')
-	projSelection = cmds.optionMenu('projSelection')
+	projSelection = cmds.optionMenu('projSelection',cc="changeSelection()")
+	currentProjects,activeProject = unity.getUnityProject()
+	for project in currentProjects:
+		cmds.menuItem( label=project )
+	cmds.optionMenu('projSelection',e=True,select=activeProject+1)
 	textLabel = cmds.text(label='Publish Name')
 	nameText = cmds.textField('nameText',w=250)
 	reloadButton = cmds.iconTextButton(style='iconOnly',image1='refresh.png',c='setText()')
