@@ -33,7 +33,8 @@ def exportAsAlembic(abcFilename):
 		endFrame = int(cmds.playbackOptions(q=True,maxTime=True))
 
 		#set folder to export to  
-		folderPath = '%s/Assets/Resources/%s'%(unity.getUnityProject(),remainingPath)
+		currentProjects,activeProject = unity.getUnityProject()
+		folderPath = '%s/Assets/Resources/%s'%(currentProjects[activeProject],remainingPath)
 		if not os.path.exists(folderPath):
 			os.makedirs(folderPath)
 
@@ -107,7 +108,8 @@ def exportAnimation(obj,animOnly):
 
 	#output name
 	parentFolder,remainingPath = fileWrangle.getParentFolder()
-	pathName = '%s/Assets/Resources/%s/%s'%(unity.getUnityProject(),remainingPath,refFileName)
+	currentProjects,activeProject = unity.getUnityProject()
+	pathName = '%s/Assets/Resources/%s/%s'%(currentProjects[activeProject],remainingPath,refFileName)
 	#make folder if it doesn't exist
 	if not os.path.exists(pathName.rsplit('/',1)[0]):
 		os.makedirs(pathName.rsplit('/',1)[0])
@@ -133,8 +135,9 @@ def copyUnityScene(unityVersion,unityEditorPath):
 	parentFolder,remainingPath = fileWrangle.getParentFolder()
 	filename = cmds.file(q=True,sn=True,shn=True)
 	#paths
-	unityTemplateFile = '%s/Assets/Scenes/Templates/shotTemplate.unity'%(unity.getUnityProject())
-	unitySceneFile = '%s/Assets/Scenes/%s/%s.unity'%(unity.getUnityProject(),remainingPath,filename.split('.')[0])
+	currentProjects,activeProject = unity.getUnityProject()
+	unityTemplateFile = '%s/Assets/Scenes/Templates/shotTemplate.unity'%(currentProjects[activeProject])
+	unitySceneFile = '%s/Assets/Scenes/%s/%s.unity'%(currentProjects[activeProject],remainingPath,filename.split('.')[0])
 	print "unitySceneFile = %s"%unitySceneFile
 	#make folder
 	folder = unitySceneFile.rsplit('/',1)[0]
@@ -143,7 +146,7 @@ def copyUnityScene(unityVersion,unityEditorPath):
 	
 	#make Unity Scene File
 	try:
-		projectPath = unity.getUnityProject()
+		projectPath = currentProjects[activeProject]
 		scenePath = "Assets/Scenes/%s/%s.unity"%(remainingPath,filename.split('.')[0])
 		shotName = "%s"%filename.split('.')[0]
 

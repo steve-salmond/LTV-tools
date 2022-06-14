@@ -142,9 +142,12 @@ def prepFile(assetObject,pathDict):
 
 	### --- WRITE JSON --- ###
 	jsonFileName  = ('%s.json'%(filename.rsplit('/',1)[-1].split('.')[0])) #name json file based on scene file name
-	pathName = '%s%s/%s'%(cmds.optionMenu('projectSelection'),pathDict["scene"]["description"]["path"],jsonFileName) #find the correct path for the file to go
+	currentProjects,activeProject = unity.getUnityProject()
+	projectSel = currentProjects[activeProject]
+	print(projectSel)
+	pathName = '%s%s/%s'%(projectSel,pathDict["scene"]["description"]["path"],jsonFileName) #find the correct path for the file to go
 	try:
-		os.mkdir('%s%s'%(cmds.optionMenu('projectSelection'),pathDict["scene"]["description"]["path"])) #make the folder if it doesn't exist
+		os.mkdir('%s%s'%(projectSel,pathDict["scene"]["description"]["path"])) #make the folder if it doesn't exist
 	except:
 		pass
 	with open(pathName, mode='w') as feedsjson: #open the file for writing
