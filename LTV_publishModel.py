@@ -63,7 +63,11 @@ def makeFbx(refName,obj):
 		bodyRig = 'CC_Base_BoneRoot' #re-define skeleton object
 	else:
 		bodyRig = '|%s|DeformationSystem'%obj
-		worldGeo = [geo]
+		worldGeo = []
+		childGeo = cmds.listRelatives(geo,c=True)
+		for c in childGeo:
+			g = cmds.parent( c, obj ) #parent to world
+			worldGeo += g
 	
 	#export fbx
 	#define full file name
@@ -96,6 +100,10 @@ def makeFbx(refName,obj):
 
 	try:
 		cmds.parent( bodyRig, obj ) #parent back in hierarchy
+	except:
+		pass
+
+	try:
 		for g in worldGeo:
 			cmds.parent( g, geo ) #parent to world
 	except:
