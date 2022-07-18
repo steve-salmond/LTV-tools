@@ -19,9 +19,21 @@ import LTV_utilities.assetWrangle as assetWrangle
 import LTV_utilities.uiAction as ui
 from datetime import datetime
 
+def printToLog(message,logPath):
+	print(message)
+	f = open(logPath, "a")
+	f.write("[%s] %s\n"%(datetime.now(), message))
+	f.close()
 		
 def prepFile(assetObject,pathDict):
+
 	start=datetime.now()
+	currentProjects,activeProject = unity.getUnityProject()
+	projectSel = currentProjects[activeProject]
+	logPath = "%s/Logs/LTV.log"%projectSel
+
+	printToLog("PUBLISH ANIMATION: Time started = %s, Unity folder = '%s'"%(start, projectSel), logPath)
+
 	persist.createFilePrefs() #make a node to save ui settings in the scene
 	filename = cmds.file(save=True) #save the scene file
 	parentFolder,remainingPath = fileWrangle.getParentFolder() #get the path to parent folder
@@ -53,6 +65,9 @@ def prepFile(assetObject,pathDict):
 		if sel: 
 			#export animation one object at a time
 			for i,obj in enumerate(sel):
+
+				printToLog("OBJECTS - Exporting animation for: '%s'"%obj, logPath)
+
 				if cmds.referenceQuery( obj,inr=True ): #check if file is referenced
 					refPath = cmds.referenceQuery( obj,filename=True ) #get reference filename
 					refNode = cmds.referenceQuery( obj,rfn=True ) #get name of reference node
@@ -111,11 +126,14 @@ def prepFile(assetObject,pathDict):
 				#charDict = {"name":  displayName,"model": publishName,"anim": "%s/%s"%(remainingPath,newName.split('/')[-1]),"outfit": outfitName} 
 				sceneDict["characters"].append(charDict) #add to scene dictionary
 
+				printToLog("OBJECTS - Exported animation for: '%s' OK"%obj, logPath)
+
 	### --- CAMERA --- ###
 
 	cameraName = cmds.optionMenu('cameraSelection',q=True,v=True) #get camera from menu
 	if cameraName:
 		if len(cameraName) > 0: #check if a camera has been selected
+			printToLog("CAMERA - Exporting camera: '%s'"%cameraName, logPath)
 			newCamera = cam.parentNewCamera(cameraName)[0] #parent a new camera to work around grouping and scaling
 			cmds.bakeResults(newCamera,simulation=True,t=(startFrame,endFrame),hierarchy='below',sampleBy=1,oversamplingRate=1,disableImplicitControl=True,preserveOutsideKeys=True,sparseAnimCurveBake=False,removeBakedAttributeFromLayer=False,removeBakedAnimFromLayer=False,bakeOnOverrideLayer=False,minimizeRotation=True,controlPoints=False,shape=True) #bake camera keys
 			obj,newName,remainingPath = exp.exportAnimation(newCamera,False) #export the camera animation
@@ -124,27 +142,33 @@ def prepFile(assetObject,pathDict):
 			cmds.delete(newCamera) #delete the temp camera 
 			camDict = {"name":  "CAM","model": "%s/%s"%(remainingPath,newName.split('/')[-1]),"anim":"%s/%s"%(remainingPath,newName.split('/')[-1])} #make a camera dictionary
 			sceneDict["cameras"].append(camDict) #add to scene dictionary
+			printToLog("CAMERA - Exported camera: '%s' OK"%cameraName, logPath)
+
 
 	### --- EXTRAS --- ###
 
 	abcPath = exp.exportAsAlembic(filename.rsplit('/',1)[-1].split('.')[0]) #do alembic export 
 	if len(abcPath) > 0: #check if anything is there
+
+		printToLog("EXTRAS - Exporting alembic: '%s'"%abcPath, logPath)
 		extraDict = {"name":  "extras","abc": abcPath,"material": '%s_mat'%abcPath} #make dictionary for alembic
 		sceneDict["extras"].append(extraDict) #add to scene dictionary
+		printToLog("EXTRAS - Exported alembic: '%s' OK"%abcPath, logPath)
 
 	### --- SET / ENVIRONMENT --- ###
 
 	setName = cmds.optionMenu('setSelection',q=True,v=True)
 	if setName and cmds.checkBox('setCheck',q=True,v=True) == True:
 		if len(setName) > 0:
+			printToLog("SETS - Exporting set: '%s'"%setName, logPath)
 			setDict = {"name":  setName,"model": 'Sets/%s'%setName}
 			sceneDict["sets"].append(setDict)
+			printToLog("SETS - Exported set: '%s' OK"%setName, logPath)
 
 	### --- WRITE JSON --- ###
 	jsonFileName  = ('%s.json'%(filename.rsplit('/',1)[-1].split('.')[0])) #name json file based on scene file name
-	currentProjects,activeProject = unity.getUnityProject()
-	projectSel = currentProjects[activeProject]
-	print(projectSel)
+
+	printToLog("JSON - Exporting json manifest file: '%s'"%jsonFileName, logPath)
 	pathName = '%s%s/%s'%(projectSel,pathDict["scene"]["description"]["path"],jsonFileName) #find the correct path for the file to go
 	try:
 		os.mkdir('%s%s'%(projectSel,pathDict["scene"]["description"]["path"])) #make the folder if it doesn't exist
@@ -158,15 +182,19 @@ def prepFile(assetObject,pathDict):
 	except:
 		pass
 
+	printToLog("JSON - Exported json manifest file: '%s' OK"%jsonFileName, logPath)
+
 	### --- UNITY --- ###
 
 	unityVersion = cmds.optionMenu('versionSelection',v=True,q=True) #get version of Unity from selection menu
 	if cmds.checkBox('unityCheck',v=True,q=True) and len(unityVersion) > 0: #check if checkBox is checked and a Unity version exists
+		printToLog("UNITY - Copying Unity scene..", logPath)
 		unityEditorPath = cmds.textFieldButtonGrp('unityPath',q=True,tx=True) #path to unity install
 		exp.copyUnityScene(unityVersion,unityEditorPath) #build the unity scene
+		printToLog("UNITY - Copied Unity scene OK", logPath)
 
 	dt = datetime.now()-start
-	print ("Time taken = %s"%(dt)) 
+	printToLog("PUBLISH ANIMATION: Finished! Time taken = %s"%(dt), logPath) 
 
 def changeSelection():
 	i=cmds.optionMenu('projectSelection',q=True,select=True)
