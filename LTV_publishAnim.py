@@ -190,6 +190,7 @@ def IoM_exportAnim_window():
 		#Camera selection
 		#variables
 		allCameras = cam.listAllCameras()
+
 		#UI
 		projectLabel = cmds.text('projectLabel',label='Project',w=40,al='left') #project label
 		projectSelection = cmds.optionMenu('projectSelection',cc="changeSelection()") #make project menu
@@ -201,6 +202,12 @@ def IoM_exportAnim_window():
 		cameraSelection = cmds.optionMenu('cameraSelection') #make camera menu
 		for camera in allCameras:
 			cmds.menuItem(l=camera) #add cameras to menu
+
+		# Try to select the '_CAM' camera by default.
+		preferredIndex = allCameras.index("_CAM")
+		if (preferredIndex >= 0):
+			cmds.optionMenu(cameraSelection, e=True, sl=preferredIndex + 1)
+
 		#UI layout
 		cmds.formLayout(
 			exportForm,
@@ -431,5 +438,6 @@ def IoM_exportAnim():
 	if(cmds.workspaceControl(workspaceName, exists=True)):
 		cmds.deleteUI(workspaceName)
 	cmds.workspaceControl(workspaceName,initialHeight=100,initialWidth=300,uiScript = 'IoM_exportAnim_window()')
+
 
 #IoM_exportAnim()
