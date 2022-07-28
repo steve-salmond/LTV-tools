@@ -24,6 +24,30 @@ def printToLog(message,logPath):
 	f = open(logPath, "a")
 	f.write("[%s] %s\n"%(datetime.now(), message))
 	f.close()
+
+def removeSquashStretchNode(character, ikHandle):
+	nodeName = "%s:%s"%(character, ikHandle)
+	attributeName = "%s.volume"%nodeName
+	if cmds.attributeQuery('volume', node=nodeName, exists=True):
+		cmds.delete(attributeName, icn=True)
+		cmds.setAttr(attributeName, 0)
+
+def removeCharacterSquashStretch(character):
+	print("Removing squash and stretch from '%s'" % character)
+	removeSquashStretchNode(character, "IKLegFront_L")
+	removeSquashStretchNode(character, "IKLegFront_R")
+	removeSquashStretchNode(character, "IKLegBack_L")
+	removeSquashStretchNode(character, "IKLegBack_R")
+	removeSquashStretchNode(character, "IKSpine3_M")
+
+def tryRemoveSquashStretch(obj):
+	try:
+		if "Kazumi_REF" in obj:
+			removeCharacterSquashStretch("Kazumi_REF")
+		elif "Kazumi" in obj:
+			removeCharacterSquashStretch("Kazumi")
+	except:
+		print("Failed to remove squash and stretch from '%s'" % obj)
 		
 def prepFile(assetObject,pathDict):
 
@@ -33,6 +57,13 @@ def prepFile(assetObject,pathDict):
 	logPath = "%s/Logs/LTV.log"%projectSel
 
 	printToLog("PUBLISH ANIMATION: Time started = %s, Unity folder = '%s'"%(start, projectSel), logPath)
+
+	# Ensure that animation end time matches the playback range
+	playbackEndTime = cmds.playbackOptions(q=True, max=True)
+	animationEndTime = cmds.playbackOptions(q=True, animationEndTime=True)
+	if animationEndTime > playbackEndTime:
+		printToLog("ANIMATION: Clipping end time from %s to %s"%(animationEndTime, playbackEndTime), logPath)
+		cmds.playbackOptions(animationEndTime=playbackEndTime)
 
 	persist.createFilePrefs() #make a node to save ui settings in the scene
 	filename = cmds.file(save=True) #save the scene file
@@ -67,6 +98,9 @@ def prepFile(assetObject,pathDict):
 			for i,obj in enumerate(sel):
 
 				printToLog("OBJECTS - Exporting animation for: '%s'"%obj, logPath)
+
+				# Remove squash and stretch deformations if possible.
+				tryRemoveSquashStretch(obj)
 
 				if cmds.referenceQuery( obj,inr=True ): #check if file is referenced
 					refPath = cmds.referenceQuery( obj,filename=True ) #get reference filename
