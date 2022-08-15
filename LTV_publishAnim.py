@@ -32,8 +32,18 @@ def removeSquashStretchNode(character, ikHandle):
 		cmds.delete(attributeName, icn=True)
 		cmds.setAttr(attributeName, 0)
 
-def removeCharacterSquashStretch(character):
+def removeCharacterSquashStretch(obj):
+
+	namespaceSeparatorIndex = obj.split(":")
+	if len(namespaceSeparatorIndex) <= 0:
+		return
+
+	character = obj.rsplit(":",1)[0].split("|")[-1]
 	print("Removing squash and stretch from '%s'" % character)
+	removeSquashStretchNode(character, "IKArm_L")
+	removeSquashStretchNode(character, "IKArm_R")
+	removeSquashStretchNode(character, "IKLeg_L")
+	removeSquashStretchNode(character, "IKLeg_R")
 	removeSquashStretchNode(character, "IKLegFront_L")
 	removeSquashStretchNode(character, "IKLegFront_R")
 	removeSquashStretchNode(character, "IKLegBack_L")
@@ -42,10 +52,7 @@ def removeCharacterSquashStretch(character):
 
 def tryRemoveSquashStretch(obj):
 	try:
-		if "Kazumi_REF" in obj:
-			removeCharacterSquashStretch("Kazumi_REF")
-		elif "Kazumi" in obj:
-			removeCharacterSquashStretch("Kazumi")
+		removeCharacterSquashStretch(obj)
 	except:
 		print("Failed to remove squash and stretch from '%s'" % obj)
 		
@@ -64,6 +71,13 @@ def prepFile(assetObject,pathDict):
 	if animationEndTime > playbackEndTime:
 		printToLog("ANIMATION: Clipping end time from %s to %s"%(animationEndTime, playbackEndTime), logPath)
 		cmds.playbackOptions(animationEndTime=playbackEndTime)
+
+	# Ensure that start time end time matches the playback range
+	playbackStartTime = cmds.playbackOptions(q=True, min=True)
+	animationStartTime = cmds.playbackOptions(q=True, animationStartTime=True)
+	if animationStartTime < playbackStartTime:
+		printToLog("ANIMATION: Clipping start time from %s to %s"%(animationStartTime, playbackStartTime), logPath)
+		cmds.playbackOptions(animationStartTime=playbackStartTime)
 
 	persist.createFilePrefs() #make a node to save ui settings in the scene
 	filename = cmds.file(save=True) #save the scene file
