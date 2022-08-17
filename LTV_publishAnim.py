@@ -26,11 +26,16 @@ def printToLog(message,logPath):
 	f.close()
 
 def removeSquashStretchNode(character, ikHandle):
-	nodeName = "%s:%s"%(character, ikHandle)
-	attributeName = "%s.volume"%nodeName
-	if cmds.attributeQuery('volume', node=nodeName, exists=True):
-		cmds.delete(attributeName, icn=True)
-		cmds.setAttr(attributeName, 0)
+	try:
+		nodeName = "%s:%s"%(character, ikHandle)
+		attributeName = "%s.volume"%nodeName
+		if cmds.attributeQuery('volume', node=nodeName, exists=True):
+			cmds.delete(attributeName, icn=True)
+			cmds.setAttr(attributeName, 0)
+			print("Removed squash and stretch node from '%s'" % nodeName)
+	except BaseException as ex:
+		# print("Failed to remove squash and stretch node from '%s': (%s)" % (nodeName, str(ex)))
+		return
 
 def removeCharacterSquashStretch(obj):
 
@@ -53,8 +58,8 @@ def removeCharacterSquashStretch(obj):
 def tryRemoveSquashStretch(obj):
 	try:
 		removeCharacterSquashStretch(obj)
-	except:
-		print("Failed to remove squash and stretch from '%s'" % obj)
+	except BaseException as ex:
+		print("Failed to remove squash and stretch from '%s': (%s)" % (obj, str(ex)))
 		
 def prepFile(assetObject,pathDict):
 
