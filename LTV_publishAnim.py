@@ -54,6 +54,7 @@ def removeCharacterSquashStretch(obj):
 	removeSquashStretchNode(character, "IKLegBack_L")
 	removeSquashStretchNode(character, "IKLegBack_R")
 	removeSquashStretchNode(character, "IKSpine3_M")
+	removeSquashStretchNode(character, "IKSplineNeck3_M")
 
 def tryRemoveSquashStretch(obj):
 	try:
