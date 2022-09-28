@@ -286,9 +286,10 @@ def IoM_exportAnim_window():
 			cmds.menuItem(l=camera) #add cameras to menu
 
 		# Try to select the '_CAM' camera by default.
-		preferredIndex = allCameras.index("_CAM")
-		if (preferredIndex >= 0):
-			cmds.optionMenu(cameraSelection, e=True, sl=preferredIndex + 1)
+		if "_CAM" in allCameras:
+			preferredIndex = allCameras.index("_CAM")
+			if (preferredIndex >= 0):
+				cmds.optionMenu(cameraSelection, e=True, sl=preferredIndex + 1)
 
 		#UI layout
 		cmds.formLayout(
