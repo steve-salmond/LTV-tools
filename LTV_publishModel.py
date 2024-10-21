@@ -307,15 +307,15 @@ def IO_publishModel_window():
 	#UI objects
 	publishForm = cmds.formLayout()
 	projLabel = cmds.text(label='Project')
-	projSelection = cmds.optionMenu('projSelection',cc="changeSelection()")
+	projSelection = cmds.optionMenu('projSelection',cc="LTV_publishModel.changeSelection()")
 	currentProjects,activeProject = unity.getUnityProject()
 	for project in currentProjects:
 		cmds.menuItem( label=project )
 	cmds.optionMenu('projSelection',e=True,select=activeProject+1)
 	textLabel = cmds.text(label='Publish Name')
 	nameText = cmds.textField('nameText',w=250)
-	reloadButton = cmds.iconTextButton(style='iconOnly',image1='refresh.png',c='setTextField()')
-	btn1 = cmds.button(l='Publish',h=50,c='PublishModelCheckText()')
+	reloadButton = cmds.iconTextButton(style='iconOnly',image1='refresh.png',c='LTV_publishModel.setTextField()')
+	btn1 = cmds.button(l='Publish',h=50,c='LTV_publishModel.PublishModelCheckText()')
 	btn2 = cmds.button(l='Close',h=50,c='cmds.deleteUI(\'Publish REF Window\')')
 	#UI layout
 	cmds.formLayout(
