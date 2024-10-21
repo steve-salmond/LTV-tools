@@ -1,10 +1,8 @@
 import maya.cmds as cmds
 import sys
-#from pymel.all import *
 import maya.mel as mel
 import json
 import os
-#import urllib2
 import urllib.request
 from collections import OrderedDict
 
@@ -89,8 +87,6 @@ def RemoveButton(shelfName,iconName):
 
 def downloadFile(remote, local):
 
-	
-	#u = urllib2.urlopen(remote)
 	u = urllib.request.urlopen(remote)
 	h = u.info()
 	totalSize = int(h["Content-Length"])
@@ -172,7 +168,9 @@ def AddIcons(shelfName,buttons):
 		#download icons from github
 		try:
 			icon = buttons[i]['icon']
-			if isinstance(icon,basestring):
+			print(icon)
+			if isinstance(icon,str):
+
 				icon = [icon]
 			for ii,ico in enumerate(icon):
 				if ico == 'separator':
@@ -184,7 +182,8 @@ def AddIcons(shelfName,buttons):
 					if ii == 0:
 						shelfString += ',i1=\''+ico+'\''  
 		except:
-			print ('file not available')
+			print ('icon file not available')
+			print(shelfString)
 			#set icon to default button because image can not be downloaded
 			shelfString += ',i1=\'commandButton.png\''
 		#update progress
@@ -245,9 +244,11 @@ def CheckText():
 	shelfName = cmds.textField('shelfNameText',q=True,text=True)
 
 	checkGroups(shelfName)
-
-	file_path = os.path.realpath(__file__) #get file location of current script
-	#print file_path.rsplit('\\',1)[0]
+	try:
+		file_path = os.path.realpath(__file__) #get file location of current script
+	except:
+		print ('running in test environment')
+		file_path = os.path.realpath("D:\Dropbox\Jobs\LTV-tools\installToolbox.py")
 	updateEnvFile("PYTHONPATH",file_path.rsplit('\\',1)[0].rsplit('/',1)[0]) #update .env file
 	updateEnvFile("MAYA_SCRIPT_PATH",file_path.rsplit('\\',1)[0].rsplit('/',1)[0]) #update .env file
 
@@ -315,7 +316,11 @@ def installToolboxWindow():
 		if (i==0):
 			cmds.menuItem( label='Manually install scripts' )
 		if (i==0):
-			cmds.menuItem( label=os.path.realpath(__file__).rsplit('\\',1)[0].rsplit('/',1)[0])
+			try:
+				cmds.menuItem( label=os.path.realpath(__file__).rsplit('\\',1)[0].rsplit('/',1)[0])
+			except:
+				print ('running in test environment')
+				cmds.menuItem( label=os.path.realpath("D:/Dropbox/Jobs/LTV-tools/installToolbox.py").rsplit('\\',1)[0].rsplit('/',1)[0])
 		#if (i<7):
 		#	isSystemPath = FilterOutSystemPaths(part)
 		#	if (isSystemPath == 0):
@@ -342,7 +347,7 @@ def installToolboxWindow():
 		dirname = os.path.dirname(__file__)
 	except:
 		print ('running in test environment')
-		dirname = 'C:/Users/Admin/Documents/Toolbox'
+		dirname = os.path.realpath("D:\Dropbox\Jobs\LTV-tools")
 
 	JSONPath = dirname+'/toolboxShelf.json'
 
