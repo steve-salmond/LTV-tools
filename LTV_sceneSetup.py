@@ -40,7 +40,7 @@ def doSetup():
 
 
 def addCamera():
-	print 'add camera'
+	print('add camera')
 	newCam = cmds.camera(n='RENDER_CAM')
 	camGrp = makeGroup('CAMERAS')
 	cmds.parent(newCam,camGrp)
