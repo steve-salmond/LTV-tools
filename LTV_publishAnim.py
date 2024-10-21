@@ -350,6 +350,7 @@ def IoM_exportAnim_window():
 		#---------------------------------------------------------------------------------------------------------------------------------------------#
 		#Unity export
 		#variables
+		'''
 		myPath = unity.getUnityPath() #get path to unity install
 		versions = unity.getUnityVersions(myPath) #list installed versions
 		#UI
@@ -387,6 +388,7 @@ def IoM_exportAnim_window():
 			
 			(unityCheck,'top',20,sep4)
 			])
+		'''
 		#---------------------------------------------------------------------------------------------------------------------------------------------#
 		#Main buttons
 		Button1 = cmds.button('Button1',l='Publish',h=50,c='prepFile(%s,%s)'%(publishedAsset,pathDict))

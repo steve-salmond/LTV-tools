@@ -12,14 +12,6 @@
 				"stp":"python"
 			},
 			{
-				"icon":["LTV_publishAnim.svg","IoMError.svg"],
-				"label":"Publish Anim",
-				"script":"LTV_publishAnim.py",
-				"modules": ["baseIO/__init__.py","baseIO/sceneVar.py","baseIO/getProj.py","LTV_utilities/__init__.py","LTV_utilities/assetWrangle.py","LTV_utilities/camera.py","LTV_utilities/fileWrangle.py","LTV_utilities/formatExports.py","LTV_utilities/persistenceNode.py","LTV_utilities/uiAction.py","LTV_utilities/unityConfig.py"],
-				"command":"import LTV_publishAnim;from LTV_publishAnim import *;LTV_publishAnim.IoM_exportAnim()",
-				"stp":"python"
-			},
-			{
 				"icon":"separator"
 			},
 			{
