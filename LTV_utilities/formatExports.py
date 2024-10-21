@@ -3,7 +3,7 @@ import LTV_utilities.fileWrangle as fileWrangle
 import os
 import tempfile
 from shutil import copyfile
-import unityConfig as unity
+import LTV_utilities.unityConfig as unity
 
 def exportAsAlembic(abcFilename):
 
@@ -62,7 +62,7 @@ def exportAsAlembic(abcFilename):
 		copyfile(abcTempPath, abcExportPath)
 		#export fbx for materials
 		cmds.select(sel,r=True)
-		print abcExportPath
+		print(abcExportPath)
 		#cmds.file(abcExportPath.replace('.abc','_mat.fbx'),force=True,type='FBX export',es=True)
 		cmds.FBXExport('-file', abcExportPath.replace('.abc','_mat.fbx'),'-s')
 
@@ -138,7 +138,7 @@ def copyUnityScene(unityVersion,unityEditorPath):
 	currentProjects,activeProject = unity.getUnityProject()
 	unityTemplateFile = '%s/Assets/Scenes/Templates/shotTemplate.unity'%(currentProjects[activeProject])
 	unitySceneFile = '%s/Assets/Scenes/%s/%s.unity'%(currentProjects[activeProject],remainingPath,filename.split('.')[0])
-	print "unitySceneFile = %s"%unitySceneFile
+	print("unitySceneFile = %s"%unitySceneFile)
 	#make folder
 	folder = unitySceneFile.rsplit('/',1)[0]
 	if not os.path.exists(folder):
@@ -155,10 +155,10 @@ def copyUnityScene(unityVersion,unityEditorPath):
 		else:
 			subprocess.Popen('%s/%s/Unity.app/Contents/MacOS/Unity -quit -batchmode -projectPath %s -executeMethod BuildSceneBatch.PerformBuild -shotName \"%s\" -scenePath \"%s\" '%(unityEditorPath,unityVersion,projectPath,shotName,scenePath),shell=True)
 	except:
-		print "Unable to populate Unity scene file"
+		print("Unable to populate Unity scene file")
 		#copy blank Unity scene if auto population fails
 		try:
 			if not os.path.exists(unitySceneFile):
 				copyfile(unityTemplateFile, unitySceneFile)
 		except:
-			print "no Unity scene file created"
+			print("no Unity scene file created")

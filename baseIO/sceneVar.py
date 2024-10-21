@@ -10,9 +10,9 @@ def getRenderLayers():
 	for layer in renderlayers:
 
 		if ':defaultRenderLayer' in layer:
-			print 'skipping %s'%layer
+			print('skipping %s'%layer)
 		elif '_defaultRenderLayer' in layer:
-			print 'skipping %s'%layer
+			print('skipping %s'%layer)
 		else:
 		    renderable = cmds.getAttr('%s.renderable'%layer)
 		    layerData.append([layer,renderable])

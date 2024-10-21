@@ -13,7 +13,7 @@ def preferedUnityVersion():
 	try:
 		file = open(settingsFile)
 		line1 = file.readline()
-		print line1
+		print (line1)
 		preferedVersion = line1.split(":")[-1].strip()
 		file.close()
 	except:
@@ -30,7 +30,7 @@ def getUnityProject():
 			unityProjectPath = data['unity']['projects']
 			activeProject = data['unity']['active']
 	except:
-		print 'no existing pref file found'
+		print ('no existing pref file found')
 		parentFolder,remainingPath = fileWrangle.getParentFolder()
 		unityProjectPath = ["%s/Unity"%parentFolder]
 		activeProject = 0
@@ -46,7 +46,7 @@ def getUnityPath():
 			json_data.close()
 			unityEditorPath = data['unity']['path']
 	except:
-		print 'no existing pref file found, trying default Unity locations'
+		print ('no existing pref file found, trying default Unity locations')
 
 		if platform.system() == "Windows":
 			unityEditorPath = "C:/Program Files/Unity/Hub/Editor"

@@ -4,7 +4,8 @@ import sys
 import maya.mel as mel
 import json
 import os
-import urllib2
+#import urllib2
+import urllib.request
 from collections import OrderedDict
 
 def updateEnvFile(envVar,location):
@@ -52,9 +53,9 @@ def createShelf(shelfName):
 			shelfExists = 1
 	
 	if shelfExists == 1:
-		print 'Shelf {} Exists'.format(shelfName)
+		print ('Shelf {} Exists'.format(shelfName))
 	else:
-		print 'Shelf {} does not exist'.format(shelfName)
+		print ('Shelf {} does not exist'.format(shelfName))
 		mel.eval("addNewShelfTab(\"%s\");"%shelfName)
 
 def RemoveSeparator(shelfName,iconName):
@@ -89,7 +90,8 @@ def RemoveButton(shelfName,iconName):
 def downloadFile(remote, local):
 
 	
-	u = urllib2.urlopen(remote)
+	#u = urllib2.urlopen(remote)
+	u = urllib.request.urlopen(remote)
 	h = u.info()
 	totalSize = int(h["Content-Length"])
 
@@ -100,7 +102,7 @@ def downloadFile(remote, local):
 		if not os.path.exists('%s'%(filePath[0])):
 			os.makedirs('%s'%(filePath[0]))
 	
-	print "Downloading %s bytes..." % totalSize,
+	print ("Downloading %s bytes..." % totalSize,)
 	fp = open(local, 'wb')
 	
 	blockSize = 8192 #100000 # urllib.urlretrieve uses 8192
@@ -113,16 +115,16 @@ def downloadFile(remote, local):
 		if totalSize > 0:
 			percent = int(count * blockSize * 100 / totalSize)
 			if percent > 100: percent = 100
-			print "%2d%%" % percent,
+			print ("%2d%%" % percent,)
 			if percent < 100:
-				print "\b\b\b\b\b",  # Erase "NN% "
+				print ("\b\b\b\b\b",)  # Erase "NN% "
 			else:
-				print "Done."
+				print ("Done.")
 	
 	fp.flush()
 	fp.close()
 	if not totalSize:
-		print
+		print("")
 
 def checkGroups(shelfName):
 	#check that shelf exists
@@ -174,7 +176,7 @@ def AddIcons(shelfName,buttons):
 				icon = [icon]
 			for ii,ico in enumerate(icon):
 				if ico == 'separator':
-					print 'seperator'
+					print ('seperator')
 					shelfString = 'cmds.separator(style=\'shelf\',horizontal=0'
 				else:
 					#try to download file
@@ -220,7 +222,7 @@ def AddIcons(shelfName,buttons):
 			shelfString += ',stp=\''+stp+'\''
 		except:
 			#shelfString += ',stp=\'mel\''
-			print 'using mel'
+			print ('using mel')
 		
 		shelfString += ',w=32,h=32,p=\''+shelfName+'\')'
 		
@@ -262,7 +264,7 @@ def FilterOutSystemPaths(path):
 
 def browseForFile():
 	filename = cmds.fileDialog2(fileMode=1, caption="Import Image")
-	print filename
+	print (filename)
 	cmds.textField('jsonPathText',e=True,tx=filename[0])
 	updateGrpCheckboxes()
 	#return filename
@@ -304,7 +306,7 @@ def installToolboxWindow():
 	jsonPathBtn = cmds.button('jsonPathBtn',width=50,label='...',c='browseForFile()')
 	separator = ';' 
 	if cmds.about(nt=True):
-		print 'its windows' 
+		print ('its windows') 
 	else:
 		separator = ':' 
 	scriptsPaths = os.getenv('MAYA_SCRIPT_PATH')
@@ -339,7 +341,7 @@ def installToolboxWindow():
 	try:
 		dirname = os.path.dirname(__file__)
 	except:
-		print 'running in test environment'
+		print ('running in test environment')
 		dirname = 'C:/Users/Admin/Documents/Toolbox'
 
 	JSONPath = dirname+'/toolboxShelf.json'

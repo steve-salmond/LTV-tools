@@ -5,7 +5,7 @@ import os.path
 import baseIO.getProj as getProj
 from shutil import copyfile
 import platform
-from LlamaIO import addAttribute
+from LlamaIO.LlamaUtil import addAttribute
 import LTV_utilities.unityConfig as unity
 
 def connectAttribute(objOut,attrOut,objIn,attrIn):
@@ -44,7 +44,7 @@ def getParentFolder():
 	parentFolder = projPath.rsplit('/',2)[0]
 	pathLen = len(projPath.split('/'))+1
 	remainingPath = scenePath.split('/',pathLen)[-1].rsplit('/',1)[0]
-	print remainingPath
+	print (remainingPath)
 	return parentFolder,remainingPath
 
 #export .fbx
@@ -349,7 +349,7 @@ def IO_publishModel_window():
 
 def IO_publishModel(silent):
 	if silent == 1:
-		print 'silent mode'
+		print ('silent mode')
 		publishModel()
 	else:
 		workspaceName = 'Publish REF Window'
