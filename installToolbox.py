@@ -5,6 +5,7 @@ import json
 import os
 import urllib.request
 from collections import OrderedDict
+import ssl
 
 def updateEnvFile(envVar,location):
 	#set maya env variable 
@@ -86,7 +87,7 @@ def RemoveButton(shelfName,iconName):
 					cmds.deleteUI(btn)
 
 def downloadFile(remote, local):
-
+	ssl._create_default_https_context = ssl._create_unverified_context #disable ssl verification on osx
 	u = urllib.request.urlopen(remote)
 	h = u.info()
 	totalSize = int(h["Content-Length"])
@@ -244,11 +245,14 @@ def CheckText():
 	shelfName = cmds.textField('shelfNameText',q=True,text=True)
 
 	checkGroups(shelfName)
+	file_path = os.path.realpath(__file__) #get file location of current script
+	'''
 	try:
 		file_path = os.path.realpath(__file__) #get file location of current script
 	except:
 		print ('running in test environment')
 		file_path = os.path.realpath("D:\Dropbox\Jobs\LTV-tools\installToolbox.py")
+	'''
 	updateEnvFile("PYTHONPATH",file_path.rsplit('\\',1)[0].rsplit('/',1)[0]) #update .env file
 	updateEnvFile("MAYA_SCRIPT_PATH",file_path.rsplit('\\',1)[0].rsplit('/',1)[0]) #update .env file
 
@@ -316,11 +320,14 @@ def installToolboxWindow():
 		if (i==0):
 			cmds.menuItem( label='Manually install scripts' )
 		if (i==0):
+			cmds.menuItem( label=os.path.realpath(__file__).rsplit('\\',1)[0].rsplit('/',1)[0])
+			'''
 			try:
 				cmds.menuItem( label=os.path.realpath(__file__).rsplit('\\',1)[0].rsplit('/',1)[0])
 			except:
 				print ('running in test environment')
 				cmds.menuItem( label=os.path.realpath("D:/Dropbox/Jobs/LTV-tools/installToolbox.py").rsplit('\\',1)[0].rsplit('/',1)[0])
+			'''
 		#if (i<7):
 		#	isSystemPath = FilterOutSystemPaths(part)
 		#	if (isSystemPath == 0):
@@ -342,13 +349,14 @@ def installToolboxWindow():
 	btn2 = cmds.button(height=50,label='Close',c='cmds.deleteUI(\'Install Toolbox\')')
 
 	listLayout = cmds.columnLayout('listLayout',adjustableColumn=True )
-
+	dirname = os.path.dirname(__file__)
+	'''
 	try:
 		dirname = os.path.dirname(__file__)
 	except:
 		print ('running in test environment')
 		dirname = os.path.realpath("D:\Dropbox\Jobs\LTV-tools")
-
+	'''
 	JSONPath = dirname+'/toolboxShelf.json'
 
 	try:
