@@ -104,6 +104,7 @@ def prepFile(assetObject,pathDict):
 	currentProjects,activeProject = unity.getUnityProject()
 	projectSel = currentProjects[activeProject]
 	logPath = "%s/Logs/LTV.log"%projectSel
+	os.makedirs("%s/Logs"%projectSel, exist_ok=True)
 
 	printToLog("PUBLISH ANIMATION: Time started = %s, Unity folder = '%s'"%(start, projectSel), logPath)
 
