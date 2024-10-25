@@ -146,6 +146,7 @@ def prepFile(assetObject,pathDict):
 	projectSel = currentProjects[activeProject]
 	print(projectSel)
 	pathName = '%s%s/%s'%(projectSel,pathDict["scene"]["description"]["path"],jsonFileName) #find the correct path for the file to go
+	print(pathName)
 	try:
 		os.mkdir('%s%s'%(projectSel,pathDict["scene"]["description"]["path"])) #make the folder if it doesn't exist
 	except:
@@ -159,11 +160,12 @@ def prepFile(assetObject,pathDict):
 		pass
 
 	### --- UNITY --- ###
-
+	'''
 	unityVersion = cmds.optionMenu('versionSelection',v=True,q=True) #get version of Unity from selection menu
 	if cmds.checkBox('unityCheck',v=True,q=True) and len(unityVersion) > 0: #check if checkBox is checked and a Unity version exists
 		unityEditorPath = cmds.textFieldButtonGrp('unityPath',q=True,tx=True) #path to unity install
 		exp.copyUnityScene(unityVersion,unityEditorPath) #build the unity scene
+	'''
 
 	dt = datetime.now()-start
 	print ("Time taken = %s"%(dt)) 
@@ -192,7 +194,7 @@ def IoM_exportAnim_window():
 		allCameras = cam.listAllCameras()
 		#UI
 		projectLabel = cmds.text('projectLabel',label='Project',w=40,al='left') #project label
-		projectSelection = cmds.optionMenu('projectSelection',cc="changeSelection()") #make project menu
+		projectSelection = cmds.optionMenu('projectSelection',cc="LTV_publishAnim.changeSelection()") #make project menu
 		currentProjects,activeProject = unity.getUnityProject()
 		for project in currentProjects:
 			cmds.menuItem( label=project )
