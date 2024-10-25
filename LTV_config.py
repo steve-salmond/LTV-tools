@@ -15,6 +15,7 @@ def LTV_config_window():
 	unityBinaryPath = unity.getUnityPath() #try find existing config, uses default install path if non found
 	versions = unity.getUnityVersions(unityBinaryPath) #look for installed unity versions
 	#UI
+	'''
 	binaryLabel = cmds.text('binaryLabel',label='Binary path',w=100,al='left') #binary path label
 	versionSelection = cmds.optionMenu('versionSelection') #version selection dropdown menu
 	for v in versions:
@@ -41,6 +42,7 @@ def LTV_config_window():
 		(unityPath,'left',10,binaryLabel)
 		]
 		)
+	'''
 	#Unity Project location
 	#Variables
 	unityProjects,activeProject = unity.getUnityProject() #try find existing config, uses path relative to maya project if non found
