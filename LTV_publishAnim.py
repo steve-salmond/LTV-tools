@@ -19,9 +19,108 @@ import LTV_utilities.assetWrangle as assetWrangle
 import LTV_utilities.uiAction as ui
 from datetime import datetime
 
+def printToLog(message,logPath):
+	print(message)
+	f = open(logPath, "a")
+	f.write("[%s] %s\n"%(datetime.now(), message))
+	f.close()
+
+def removeSquashStretchNode(character, ikHandle):
+	try:
+		nodeName = "%s:%s"%(character, ikHandle)
+		attributeName = "%s.volume"%nodeName
+		if cmds.attributeQuery('volume', node=nodeName, exists=True):
+			cmds.delete(attributeName, icn=True)
+			cmds.setAttr(attributeName, 0)
+			print("Removed squash and stretch node from '%s'" % nodeName)
+	except BaseException as ex:
+		# print("Failed to remove squash and stretch node from '%s': (%s)" % (nodeName, str(ex)))
+		return
+
+def removeCharacterSquashStretch(obj):
+
+	namespaceSeparatorIndex = obj.split(":")
+	if len(namespaceSeparatorIndex) <= 0:
+		return
+
+	character = obj.rsplit(":",1)[0].split("|")[-1]
+	print("Removing squash and stretch from '%s'" % character)
+	ids = ["IKArm_L", "IKArm_R", "IKLeg_L", "IKLeg_R", "IKLegFront_L", "IKLegFront_R", "IKLegBack_L", "IKLegBack_R", "IKSpine3_M", "IKSplineNeck3_M"]
+	for id in ids:
+		removeSquashStretchNode(character, id)
+
+def tryRemoveSquashStretch(obj):
+	try:
+		removeCharacterSquashStretch(obj)
+	except BaseException as ex:
+		print("Failed to remove squash and stretch from '%s': (%s)" % (obj, str(ex)))
+
+def removeNonUniformScaleKeys(character, nodeId):
+	try:
+		nodeName = "%s:%s"%(character, nodeId)
+
+		sxName = "%s.scaleX"%nodeName
+		syName = "%s.scaleY"%nodeName
+		szName = "%s.scaleZ"%nodeName				
+
+		sx = cmds.getAttr(sxName)
+		sy = cmds.getAttr(syName)
+		sz = cmds.getAttr(szName)
+
+		if sx != 1 and (sx != sy or sx != sz or sy != sz):
+			cmds.delete(sxName, icn=True)
+			cmds.delete(syName, icn=True)
+			cmds.delete(szName, icn=True)
+			cmds.setAttr(sxName, 1)
+			cmds.setAttr(syName, 1)
+			cmds.setAttr(szName, 1)
+			print("Removed non-uniform scale from '%s'" % nodeName)
+	except BaseException as ex:
+		# print("Failed to remove non-uniform scale keys from '%s': (%s)" % (nodeName, str(ex)))
+		return
+
+def removeCharacterNonUniformScaleKeys(obj):
+
+	namespaceSeparatorIndex = obj.split(":")
+	if len(namespaceSeparatorIndex) <= 0:
+		return
+
+	character = obj.rsplit(":",1)[0].split("|")[-1]
+	print("Removing non-uniform scale keys from '%s'" % character)
+	ids = ["Root_M", "RootPart1_M", "RootPart2_M", "Spine1_M", "Spine1Part1_M", "Spine1Part2_M"]
+	for id in ids:
+		removeNonUniformScaleKeys(character, id)
+
+def tryRemoveNonUniformScaleKeys(obj):
+	try:
+		removeCharacterNonUniformScaleKeys(obj)
+	except BaseException as ex:
+		print("Failed to remove non-uniform scale keys from '%s': (%s)" % (obj, str(ex)))
+
 		
 def prepFile(assetObject,pathDict):
 	start=datetime.now()
+
+	currentProjects,activeProject = unity.getUnityProject()
+	projectSel = currentProjects[activeProject]
+	logPath = "%s/Logs/LTV.log"%projectSel
+
+	printToLog("PUBLISH ANIMATION: Time started = %s, Unity folder = '%s'"%(start, projectSel), logPath)
+
+	# Ensure that animation end time matches the playback range
+	playbackEndTime = cmds.playbackOptions(q=True, max=True)
+	animationEndTime = cmds.playbackOptions(q=True, animationEndTime=True)
+	if animationEndTime > playbackEndTime:
+		printToLog("ANIMATION: Clipping end time from %s to %s"%(animationEndTime, playbackEndTime), logPath)
+		cmds.playbackOptions(animationEndTime=playbackEndTime)
+
+	# Ensure that start time end time matches the playback range
+	playbackStartTime = cmds.playbackOptions(q=True, min=True)
+	animationStartTime = cmds.playbackOptions(q=True, animationStartTime=True)
+	if animationStartTime < playbackStartTime:
+		printToLog("ANIMATION: Clipping start time from %s to %s"%(animationStartTime, playbackStartTime), logPath)
+		cmds.playbackOptions(animationStartTime=playbackStartTime)
+
 	persist.createFilePrefs() #make a node to save ui settings in the scene
 	filename = cmds.file(save=True) #save the scene file
 	parentFolder,remainingPath = fileWrangle.getParentFolder() #get the path to parent folder
@@ -53,6 +152,13 @@ def prepFile(assetObject,pathDict):
 		if sel: 
 			#export animation one object at a time
 			for i,obj in enumerate(sel):
+
+				printToLog("OBJECTS - Exporting animation for: '%s'"%obj, logPath)
+				# Remove squash and stretch deformations if possible.
+				tryRemoveSquashStretch(obj)
+				# Remove non-uniform scale keys if possible.
+				tryRemoveNonUniformScaleKeys(obj)
+
 				if cmds.referenceQuery( obj,inr=True ): #check if file is referenced
 					refPath = cmds.referenceQuery( obj,filename=True ) #get reference filename
 					refNode = cmds.referenceQuery( obj,rfn=True ) #get name of reference node
@@ -111,11 +217,14 @@ def prepFile(assetObject,pathDict):
 				#charDict = {"name":  displayName,"model": publishName,"anim": "%s/%s"%(remainingPath,newName.split('/')[-1]),"outfit": outfitName} 
 				sceneDict["characters"].append(charDict) #add to scene dictionary
 
+				printToLog("OBJECTS - Exported animation for: '%s' OK"%obj, logPath)
+
 	### --- CAMERA --- ###
 
 	cameraName = cmds.optionMenu('cameraSelection',q=True,v=True) #get camera from menu
 	if cameraName:
 		if len(cameraName) > 0: #check if a camera has been selected
+			printToLog("CAMERA - Exporting camera: '%s'"%cameraName, logPath)
 			newCamera = cam.parentNewCamera(cameraName)[0] #parent a new camera to work around grouping and scaling
 			cmds.bakeResults(newCamera,simulation=True,t=(startFrame,endFrame),hierarchy='below',sampleBy=1,oversamplingRate=1,disableImplicitControl=True,preserveOutsideKeys=True,sparseAnimCurveBake=False,removeBakedAttributeFromLayer=False,removeBakedAnimFromLayer=False,bakeOnOverrideLayer=False,minimizeRotation=True,controlPoints=False,shape=True) #bake camera keys
 			obj,newName,remainingPath = exp.exportAnimation(newCamera,False) #export the camera animation
@@ -124,24 +233,30 @@ def prepFile(assetObject,pathDict):
 			cmds.delete(newCamera) #delete the temp camera 
 			camDict = {"name":  "CAM","model": "%s/%s"%(remainingPath,newName.split('/')[-1]),"anim":"%s/%s"%(remainingPath,newName.split('/')[-1])} #make a camera dictionary
 			sceneDict["cameras"].append(camDict) #add to scene dictionary
+			printToLog("CAMERA - Exported camera: '%s' OK"%cameraName, logPath)
 
 	### --- EXTRAS --- ###
 
 	abcPath = exp.exportAsAlembic(filename.rsplit('/',1)[-1].split('.')[0]) #do alembic export 
 	if len(abcPath) > 0: #check if anything is there
+		printToLog("EXTRAS - Exporting alembic: '%s'"%abcPath, logPath)
 		extraDict = {"name":  "extras","abc": abcPath,"material": '%s_mat'%abcPath} #make dictionary for alembic
 		sceneDict["extras"].append(extraDict) #add to scene dictionary
+		printToLog("EXTRAS - Exported alembic: '%s' OK"%abcPath, logPath)
 
 	### --- SET / ENVIRONMENT --- ###
 
 	setName = cmds.optionMenu('setSelection',q=True,v=True)
 	if setName and cmds.checkBox('setCheck',q=True,v=True) == True:
 		if len(setName) > 0:
+			printToLog("SETS - Exporting set: '%s'"%setName, logPath)
 			setDict = {"name":  setName,"model": 'Sets/%s'%setName}
 			sceneDict["sets"].append(setDict)
+			printToLog("SETS - Exported set: '%s' OK"%setName, logPath)
 
 	### --- WRITE JSON --- ###
 	jsonFileName  = ('%s.json'%(filename.rsplit('/',1)[-1].split('.')[0])) #name json file based on scene file name
+	printToLog("JSON - Exporting json manifest file: '%s'"%jsonFileName, logPath)
 	currentProjects,activeProject = unity.getUnityProject()
 	projectSel = currentProjects[activeProject]
 	print(projectSel)
@@ -159,16 +274,19 @@ def prepFile(assetObject,pathDict):
 	except:
 		pass
 
+	printToLog("JSON - Exported json manifest file: '%s' OK"%jsonFileName, logPath)
+
 	### --- UNITY --- ###
 	'''
 	unityVersion = cmds.optionMenu('versionSelection',v=True,q=True) #get version of Unity from selection menu
 	if cmds.checkBox('unityCheck',v=True,q=True) and len(unityVersion) > 0: #check if checkBox is checked and a Unity version exists
 		unityEditorPath = cmds.textFieldButtonGrp('unityPath',q=True,tx=True) #path to unity install
 		exp.copyUnityScene(unityVersion,unityEditorPath) #build the unity scene
+		printToLog("UNITY - Copied Unity scene OK", logPath)
 	'''
 
 	dt = datetime.now()-start
-	print ("Time taken = %s"%(dt)) 
+	printToLog("PUBLISH ANIMATION: Finished! Time taken = %s"%(dt), logPath)
 
 def changeSelection():
 	i=cmds.optionMenu('projectSelection',q=True,select=True)
@@ -203,6 +321,12 @@ def IoM_exportAnim_window():
 		cameraSelection = cmds.optionMenu('cameraSelection') #make camera menu
 		for camera in allCameras:
 			cmds.menuItem(l=camera) #add cameras to menu
+
+		# Try to select the '_CAM' camera by default.
+		if "_CAM" in allCameras:
+			preferredIndex = allCameras.index("_CAM")
+			if (preferredIndex >= 0):
+				cmds.optionMenu(cameraSelection, e=True, sl=preferredIndex + 1)
 		#UI layout
 		cmds.formLayout(
 			exportForm,
