@@ -78,11 +78,14 @@ def updatePrefs(key,value):
 	userPrefsDict = {"unity":{}} #format json
 	keyDict = {"unity": {key:  value}} #format key
 	prefPath = fileWrangle.userPrefsPath() #make path
+	print("pref path")
+	print(prefPath)
 	if not os.path.exists(prefPath):
 		os.makedirs(prefPath) #make folder
 	jsonFileName  = '%s/LTV_prefs.json'%prefPath #file name
 	try:
 		with open(jsonFileName) as json_data: #open the pref file if it exists
+			print(jsonFileName)
 			userPrefsDict = json.load(json_data) #update prefs dictionary from file
 			json_data.close() #close pref file
 	except:

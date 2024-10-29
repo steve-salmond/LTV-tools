@@ -44,6 +44,7 @@ def addCamera():
 	newCam = cmds.camera(n='RENDER_CAM')
 	camGrp = makeGroup('CAMERAS')
 	cmds.parent(newCam,camGrp)
+	#maya/scenes/_camera_rig_ref.ma
 
 def addSun():
 	if cmds.objExists("SUN") == 0:
@@ -141,7 +142,7 @@ def IoM_sceneSetup_window():
 	setupButton = cmds.button('setupButton',l='Scene Setup',h=50,c='doSetup()')
 	cmds.separator(height=20, style='in' )
 	staticButtonForm = cmds.formLayout()
-	#camButton = cmds.button('camButton',l='Add Camera',h=50,c='addCamera()')
+	camButton = cmds.button('camButton',l='Add Camera',h=50,c='addCamera()')
 	#sunButton = cmds.button('sunButton',l='Add Sun',h=50,c='addSun()')
 
 	

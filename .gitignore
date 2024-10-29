@@ -1,1 +1,4 @@
 *.pyc
+LTV-tools/installToolbox.mel
+LTV-tools/installToolbox.py
+LTV-tools/toolboxShelf.json

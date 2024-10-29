@@ -1,11 +1,14 @@
 import maya.cmds as cmds
 import LTV_utilities.unityConfig as unity
+import importlib
 
 ### --- UI --- ###
 
 def changeSelection():
+	importlib.reload(unity)
 	i=cmds.optionMenu('projSelection',q=True,select=True)
 	unity.updatePrefs('active',i-1)
+	print(i)
 
 def LTV_config_window():
 	configForm = cmds.formLayout() #start the form
