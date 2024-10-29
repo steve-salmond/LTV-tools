@@ -1,22 +1,21 @@
 import maya.cmds as cmds
 import LTV_utilities.unityConfig as unity
-import importlib
+#import importlib
 
 ### --- UI --- ###
 
 def changeSelection():
-	importlib.reload(unity)
+	#importlib.reload(unity)
 	i=cmds.optionMenu('projSelection',q=True,select=True)
 	unity.updatePrefs('active',i-1)
-	print(i)
 
 def LTV_config_window():
 	configForm = cmds.formLayout() #start the form
 	#Unity Binary location
 	#variables
-	preferedVersion = unity.preferedUnityVersion() #look for prefered unity version in project config
-	unityBinaryPath = unity.getUnityPath() #try find existing config, uses default install path if non found
-	versions = unity.getUnityVersions(unityBinaryPath) #look for installed unity versions
+	#preferedVersion = unity.preferedUnityVersion() #look for prefered unity version in project config
+	#unityBinaryPath = unity.getUnityPath() #try find existing config, uses default install path if non found
+	#versions = unity.getUnityVersions(unityBinaryPath) #look for installed unity versions
 	#UI
 	'''
 	binaryLabel = cmds.text('binaryLabel',label='Binary path',w=100,al='left') #binary path label

@@ -78,8 +78,6 @@ def updatePrefs(key,value):
 	userPrefsDict = {"unity":{}} #format json
 	keyDict = {"unity": {key:  value}} #format key
 	prefPath = fileWrangle.userPrefsPath() #make path
-	print("pref path")
-	print(prefPath)
 	if not os.path.exists(prefPath):
 		os.makedirs(prefPath) #make folder
 	jsonFileName  = '%s/LTV_prefs.json'%prefPath #file name
@@ -129,5 +127,8 @@ def browseToProject():
 		cmds.optionMenu('projSelection',e=True)
 		cmds.menuItem( label=folder[0])
 		cmds.optionMenu('projSelection',e=True,value=folder[0])
+		menu_items = cmds.optionMenu('projSelection', query=True, itemListLong=True)
+		last_index = len(menu_items)
+		updatePrefs("active",last_index-1) #update pref to file
 
 
