@@ -1,50 +1,14 @@
 import maya.cmds as cmds
 import LTV_utilities.unityConfig as unity
-#import importlib
 
 ### --- UI --- ###
 
 def changeSelection():
-	#importlib.reload(unity)
 	i=cmds.optionMenu('projSelection',q=True,select=True)
 	unity.updatePrefs('active',i-1)
 
 def LTV_config_window():
 	configForm = cmds.formLayout() #start the form
-	#Unity Binary location
-	#variables
-	#preferedVersion = unity.preferedUnityVersion() #look for prefered unity version in project config
-	#unityBinaryPath = unity.getUnityPath() #try find existing config, uses default install path if non found
-	#versions = unity.getUnityVersions(unityBinaryPath) #look for installed unity versions
-	#UI
-	'''
-	binaryLabel = cmds.text('binaryLabel',label='Binary path',w=100,al='left') #binary path label
-	versionSelection = cmds.optionMenu('versionSelection') #version selection dropdown menu
-	for v in versions:
-		cmds.menuItem(l=v) #add version to dropdown menu
-	try:
-		cmds.optionMenu('versionSelection',v=preferedVersion,e=True) #set menu to prefered version if it exists
-	except:
-		pass
-	unityPath = cmds.textFieldButtonGrp('unityPath',tx=unityBinaryPath,buttonLabel='...',bc="unity.browseToFolder()") #binary textfield button
-	# UI layout
-	cmds.formLayout(
-		configForm,
-		edit=True,
-		attachForm=[
-		(binaryLabel,'left',10),
-		(binaryLabel,'top',20),
-		(versionSelection,'top',50),
-		(versionSelection,'right',10),
-		(unityPath,'top',16),
-		(unityPath,'right',10)
-		],
-		attachControl=[
-		(versionSelection,'left',10,binaryLabel),
-		(unityPath,'left',10,binaryLabel)
-		]
-		)
-	'''
 	#Unity Project location
 	#Variables
 	unityProjects,activeProject = unity.getUnityProject() #try find existing config, uses path relative to maya project if non found
