@@ -40,11 +40,13 @@ def doSetup():
 
 
 def addCamera():
-	print('add camera')
 	newCam = cmds.camera(n='RENDER_CAM')
 	camGrp = makeGroup('CAMERAS')
 	cmds.parent(newCam,camGrp)
-	#maya/scenes/_camera_rig_ref.ma
+
+def importCamRig():
+	filepath="%s/scenes/_camera_rig_ref.ma"%getProj.getProject()
+	cmds.file(filepath,i=True,type="mayaAscii",ignoreVersion=True,ra=True,mergeNamespacesOnClash=False)
 
 def addSun():
 	if cmds.objExists("SUN") == 0:
@@ -142,8 +144,22 @@ def IoM_sceneSetup_window():
 	setupButton = cmds.button('setupButton',l='Scene Setup',h=50,c='doSetup()')
 	cmds.separator(height=20, style='in' )
 	staticButtonForm = cmds.formLayout()
-	camButton = cmds.button('camButton',l='Add Camera',h=50,c='addCamera()')
+	camButton = cmds.button('camButton',l='Add Camera',annotation="Creates new camera",h=50,c='addCamera()')
+	camRigButton = cmds.button('camRigButton',l='Add Camera Rig',annotation="import camera from scenes/_camera_rig_ref.ma",h=50,c='importCamRig()')
 	#sunButton = cmds.button('sunButton',l='Add Sun',h=50,c='addSun()')
+	cmds.formLayout(
+		staticButtonForm,
+		edit=True,
+		attachForm=[
+		(camButton,'left',0),
+		(camRigButton,'right',0)
+		],
+		attachControl=[
+		(camRigButton,'left',0,camButton)
+		],
+		attachPosition=[
+		(camButton,'right',0,50)
+		])
 
 	
 
