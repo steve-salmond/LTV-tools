@@ -13,10 +13,9 @@ def LTV_config_window():
 	#Variables
 	unityProjects,activeProject = unity.getUnityProject() #try find existing config, uses path relative to maya project if non found
 	#UI
-	sep_proj = cmds.separator("sep_proj",height=4, style='in' ) #top separator & project config anchor
 	projectLabel = cmds.text('projectLabel',label='Project paths',w=100,al='left') #project label
 	addProjectButton = cmds.button('addProjectButton',l='Add',h=25,w=100,c='unity.browseToProject()')
-	removeProjectButton = cmds.button('removeProjectButton',l='Remove',h=25,w=100,c='')
+	removeProjectButton = cmds.button('removeProjectButton',l='Remove',h=25,w=100,c='',en=False)
 	projSelection = cmds.optionMenu('projSelection',cc="changeSelection()")
 	for project in unityProjects:
 		cmds.menuItem( label=project )
@@ -26,18 +25,15 @@ def LTV_config_window():
 		configForm,
 		edit=True,
 		attachForm=[
-		(sep_proj,'top',90),
-		(sep_proj,'right',10),
-		(sep_proj,'left',10),
 		(removeProjectButton,'right',10),
 		(projectLabel,'left',10),
-		(projSelection,'right',10)
+		(projSelection,'right',10),
+		(projectLabel,'top',10),
+		(addProjectButton,'top',6),
+		(removeProjectButton,'top',6)
 		],
 		attachControl=[
-		(projectLabel,'top',10,sep_proj),
-		(addProjectButton,'top',6,sep_proj),
 		(addProjectButton,'left',10,projectLabel),
-		(removeProjectButton,'top',6,sep_proj),
 		(removeProjectButton,'left',1,addProjectButton),
 		(projSelection,'top',6,addProjectButton),
 		(projSelection,'left',10,projectLabel)
@@ -54,6 +50,6 @@ def LTV_configWindow():
 	workspaceName = 'LTV Config'
 	if(cmds.workspaceControl(workspaceName, exists=True)):
 		cmds.deleteUI(workspaceName)
-	cmds.workspaceControl(workspaceName,initialHeight=100,initialWidth=300,uiScript = 'LTV_config_window()')
+	cmds.workspaceControl(workspaceName,initialHeight=50,initialWidth=200,uiScript = 'LTV_config_window()')
 
 #LTV_configWindow()

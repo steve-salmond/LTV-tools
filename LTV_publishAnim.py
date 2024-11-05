@@ -277,14 +277,6 @@ def prepFile(assetObject,pathDict):
 
 	printToLog("JSON - Exported json manifest file: '%s' OK"%jsonFileName, logPath)
 
-	### --- UNITY --- ###
-	'''
-	unityVersion = cmds.optionMenu('versionSelection',v=True,q=True) #get version of Unity from selection menu
-	if cmds.checkBox('unityCheck',v=True,q=True) and len(unityVersion) > 0: #check if checkBox is checked and a Unity version exists
-		unityEditorPath = cmds.textFieldButtonGrp('unityPath',q=True,tx=True) #path to unity install
-		exp.copyUnityScene(unityVersion,unityEditorPath) #build the unity scene
-		printToLog("UNITY - Copied Unity scene OK", logPath)
-	'''
 
 	dt = datetime.now()-start
 	printToLog("PUBLISH ANIMATION: Finished! Time taken = %s"%(dt), logPath)
@@ -473,49 +465,7 @@ def IoM_exportAnim_window():
 			(setCheck,'top',20,sep3),
 			(setSelection,'top',16,sep3),
 			(setSelection,'left',10,setCheck)
-			])
-		#---------------------------------------------------------------------------------------------------------------------------------------------#
-		#Unity export
-		#variables
-		'''
-		myPath = unity.getUnityPath() #get path to unity install
-		versions = unity.getUnityVersions(myPath) #list installed versions
-		#UI
-		sep4 = cmds.separator("sep4",height=4, style='in' ) #top of unity section
-		versionLabel = cmds.text('versionLabel',label='Unity',w=40,al='left') #Unity label
-		versionSelection = cmds.optionMenu('versionSelection') #version dropdown menu
-		for v in versions:
-			cmds.menuItem(l=v) #add versions to menu
-		preferedVersion = unity.preferedUnityVersion()	#look for a prefered version of unity
-		try:
-			cmds.optionMenu('versionSelection',v=preferedVersion,enable=False,e=False) #set the prefered version if it exists
-		except:
-			pass
-		unityCheck = cmds.checkBox('unityCheck',l="",value=False,annotation="Generate Unity scene file",v=True,cc='ui.disableMenu(\'unityCheck\',[\'versionSelection\'],[\'unityPath\'])') #checkbox to make unity file
-		unityPath = cmds.textFieldButtonGrp('unityPath',tx=myPath,buttonLabel='...',enable=False,bc="unity.browseToFolder()") #textfield button to set path to unity
-		#UI layout
-		cmds.formLayout(
-			exportForm,
-			edit=True,
-			attachForm=[
-			(sep4,'right',10),
-			(sep4,'left',10),
-			(sep4,'bottom',140),
-			(versionLabel,'left',10),
-			(versionSelection,'right',10),
-			(unityCheck,'left',80),
-			(unityPath,'left',100),
-			(unityPath,'right',10)
-			],
-			attachControl=[
-			(versionLabel,'top',20,sep4),
-			(versionSelection,'top',50,sep4),
-			(versionSelection,'left',60,versionLabel),
-			(unityPath,'top',16,sep4),
-			
-			(unityCheck,'top',20,sep4)
-			])
-		'''
+			])		
 		#---------------------------------------------------------------------------------------------------------------------------------------------#
 		#Main buttons
 		Button1 = cmds.button('Button1',l='Publish',h=50,c='prepFile(%s,%s)'%(publishedAsset,pathDict))
