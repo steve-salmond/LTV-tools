@@ -46,7 +46,7 @@ def addCamera():
 
 def importCamRig():
 	filepath="%s/scenes/_camera_rig_ref.ma"%getProj.getProject()
-	cmds.file(filepath,i=True,type="mayaAscii",ignoreVersion=True,ra=True,mergeNamespacesOnClash=False)
+	cmds.file(filepath,i=True,type="mayaAscii",ignoreVersion=True,ra=True,mergeNamespacesOnClash=False,namespace=":")
 
 def addSun():
 	if cmds.objExists("SUN") == 0:
