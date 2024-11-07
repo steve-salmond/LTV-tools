@@ -27,10 +27,15 @@ def findGeoWithBlendShapes():
 	#find all blendshapes
 	blendShapes = cmds.ls(type='blendShape')
 	#loop through to find geo
+	allConnected = []
 	for b in blendShapes:
 		connected = cmds.listConnections(b,destination=True,type='objectSet')
-		for s in connected:
-			members = cmds.sets( s, q=True )
+		allConnected.extend(connected)
+	for s in allConnected:
+		members = cmds.sets( s, q=True )
+		if type(members) is type(None):
+			print("found unconnected blendshape, ignoring")
+		else:
 			for m in members:
 				blendGeo.append(m.split('.')[0])
 	return blendGeo
