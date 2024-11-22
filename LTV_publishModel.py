@@ -30,11 +30,11 @@ def findGeoWithBlendShapes():
 	allConnected = []
 	for b in blendShapes:
 		connected = cmds.listConnections(b,destination=True,type='objectSet')
-		if type(members) is not type(None):
-			allConnected.extend(connected)
+		if type(connected) is not type(None):
+			allConnected.extend(connected) 
 		else:
 			connected = cmds.listConnections(b,source=True,type='mesh')
-			if type(members) is not type(None):
+			if type(connected) is not type(None):
 				blendGeo.extend(connected)
 	for s in allConnected:
 		members = cmds.sets( s, q=True )
