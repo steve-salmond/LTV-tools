@@ -211,7 +211,8 @@ def prepFile(assetObject,pathDict):
 					pass
 
 				#format json
-				displayName = publishName.split("_")[0]
+				displayName = publishName.rsplit("_", 1)[0]
+				# displayName = publishName.split("_")[0]
 				#displayName = re.split('\d+', newName)[-1][1:]
 				
 				charDict = {"name":  displayName,"assetType":  assetType,"anim": "%s/%s"%(remainingPath,newName.split('/')[-1]),"outfit": outfits[i]} 
