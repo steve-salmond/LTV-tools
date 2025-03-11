@@ -45,7 +45,7 @@ def removeCharacterSquashStretch(obj):
 
 	character = obj.rsplit(":",1)[0].split("|")[-1]
 	print("Removing squash and stretch from '%s'" % character)
-	ids = ["IKArm_L", "IKArm_R", "IKLeg_L", "IKLeg_R", "IKLegFront_L", "IKLegFront_R", "IKLegBack_L", "IKLegBack_R", "IKSpine3_M", "IKSplineNeck3_M"]
+	ids = ["IKArm_L", "IKArm_R", "IKLeg_L", "IKLeg_R", "IKLegFront_L", "IKLegFront_R", "IKLegBack_L", "IKLegBack_R", "IKSpine3_M", "IKSplineNeck3_M", "IKSplineTail4_M"]
 	for id in ids:
 		removeSquashStretchNode(character, id)
 
@@ -87,7 +87,7 @@ def removeCharacterNonUniformScaleKeys(obj):
 
 	character = obj.rsplit(":",1)[0].split("|")[-1]
 	print("Removing non-uniform scale keys from '%s'" % character)
-	ids = ["Root_M", "RootPart1_M", "RootPart2_M", "Spine1_M", "Spine1Part1_M", "Spine1Part2_M"]
+	ids = ["Root_M", "RootPart1_M", "RootPart2_M", "Spine1_M", "Spine1Part1_M", "Spine1Part2_M", "Tail0_M", "Tail1_M", "Tail2_M", "Tail3_M", "Tail4_M", "Tail5_M", "Tail6_M", "Tail7_M"]
 	for id in ids:
 		removeNonUniformScaleKeys(character, id)
 
@@ -227,7 +227,9 @@ def prepFile(assetObject,pathDict):
 	if cameraName:
 		if len(cameraName) > 0: #check if a camera has been selected
 			printToLog("CAMERA - Exporting camera: '%s'"%cameraName, logPath)
+			cmds.xform(cameraName, centerPivots = True) # Try to ensure that there's no weird camera pivot offsets - Unity can't handle those.
 			newCamera = cam.parentNewCamera(cameraName)[0] #parent a new camera to work around grouping and scaling
+
 			cmds.bakeResults(newCamera,simulation=True,t=(startFrame,endFrame),hierarchy='below',sampleBy=1,oversamplingRate=1,disableImplicitControl=True,preserveOutsideKeys=True,sparseAnimCurveBake=False,removeBakedAttributeFromLayer=False,removeBakedAnimFromLayer=False,bakeOnOverrideLayer=False,minimizeRotation=True,controlPoints=False,shape=True) #bake camera keys
 			obj,newName,remainingPath = exp.exportAnimation(newCamera,False) #export the camera animation
 			if newCamera and isinstance(newCamera, list): #sometimes the camera returns a list
