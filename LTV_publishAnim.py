@@ -97,6 +97,25 @@ def tryRemoveNonUniformScaleKeys(obj):
 	except BaseException as ex:
 		print("Failed to remove non-uniform scale keys from '%s': (%s)" % (obj, str(ex)))
 
+def tryRemoveNode(rootNode, nodeName="Root_M", parentNodeName="DeformationSystem"):
+	rootChildren = cmds.listRelatives(rootNode, children=True, type='transform', path=True, fullPath=True)
+	deformationSystemNodes = [child for child in rootChildren if parentNodeName in child]
+
+	if deformationSystemNodes:
+		deformationSystemPath = deformationSystemNodes[0]
+		potentialRootMPath = f"|{deformationSystemPath}|{nodeName}"
+
+		if cmds.objExists(potentialRootMPath):
+			try:
+				cmds.delete(potentialRootMPath)
+				print(f"Removed extraneous node: {potentialRootMPath} (child of {parentNodeName})")
+			except Exception as e:
+				print(f"Failed to remove extraneous node{potentialRootMPath}:{e}")
+		else:
+			print(f"No node '{nodeName}' found as a child of '{parentNodeName}' for '{rootNode}'.")
+	else:
+		print(f"{parentNodeName} not found as a direct child of '{rootNode}'.")
+
 		
 def prepFile(assetObject,pathDict):
 	start=datetime.now()
@@ -159,6 +178,8 @@ def prepFile(assetObject,pathDict):
 				tryRemoveSquashStretch(obj)
 				# Remove non-uniform scale keys if possible.
 				tryRemoveNonUniformScaleKeys(obj)
+				# Remove extraneous Root_M nodes if possible.
+				tryRemoveNode(obj)
 
 				if cmds.referenceQuery( obj,inr=True ): #check if file is referenced
 					refPath = cmds.referenceQuery( obj,filename=True ) #get reference filename
