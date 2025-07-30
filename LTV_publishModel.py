@@ -126,15 +126,16 @@ def makeRef(refName,publishString):
 	addAttribute(publishString,'publishName',refName) #add publish name attribute
 	
 
-	attrName = "outfit"
-	if cmds.attributeQuery(attrName,node="Main",exists=True):
-	    e = cmds.attributeQuery(attrName,node="Main",listEnum=True)[0]
-	    if cmds.attributeQuery(attrName,node=publishString,exists=True):
-	    	cmds.deleteAttr(publishString,at=attrName)
-	    cmds.addAttr(publishString,ln=attrName,attributeType='enum',enumName=e)
-	    cmds.setAttr('%s.%s'%(publishString,attrName),e=True,keyable=True)
-	    cmds.connectAttr("Main.outfit","%s.outfit"%publishString,f=True)
-
+	# Apply outfit info
+	if cmds.objExists("Main"):
+		attrName = "outfit"
+		if cmds.attributeQuery(attrName,node="Main",exists=True):
+			e = cmds.attributeQuery(attrName,node="Main",listEnum=True)[0]
+			if cmds.attributeQuery(attrName,node=publishString,exists=True):
+				cmds.deleteAttr(publishString,at=attrName)
+			cmds.addAttr(publishString,ln=attrName,attributeType='enum',enumName=e)
+			cmds.setAttr('%s.%s'%(publishString,attrName),e=True,keyable=True)
+			cmds.connectAttr("Main.outfit","%s.outfit"%publishString,f=True)
 	
 	#get parent folder
 	scenePath = cmds.file(q=True,sn=True)
