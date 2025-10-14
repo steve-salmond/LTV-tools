@@ -119,7 +119,9 @@ def exportAnimation(obj,animOnly):
 		cmds.loadPlugin("fbxmaya")		#load plugin
 	except:
 		pass
-	cmds.FBXExportFileVersion("-v","FBX201100") 	#set fbx version
+
+	cmds.FBXExportShapes("-v", True)				#set export blendshapes
+	cmds.FBXExportFileVersion("-v","FBX201800") 	#set fbx version
 	cmds.FBXExportBakeComplexAnimation("-v",True)	#set export animation
 	cmds.FBXExportAnimationOnly("-v",animOnly)		#set export animation only
 	cmds.FBXExportUseSceneName ("-v",True)			#set use scene name
